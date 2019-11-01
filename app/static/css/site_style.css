@@ -1,0 +1,181 @@
+/* @import url(https://fonts.googleapis.com/css?family=Roboto|Open+Sans); */
+
+/* body {
+	background: #e2eaef;
+	font-family: "Open Sans", sans-serif;
+} */
+h2 {
+	color: #000;
+	font-size: 26px;
+	font-weight: 300;
+	text-align: center;
+	text-transform: uppercase;
+	position: relative;
+	margin: 10px 0 50px;
+}
+h2::after {
+	content: "";
+	width: 100px;
+	position: absolute;
+	margin: 0 auto;
+	height: 4px;
+	border-radius: 1px;
+	background: #71b0e4;
+	left: 0;
+	right: 0;
+	bottom: -20px;
+}
+h4 {
+	margin-bottom: 15px;
+	font-size: 18px;	
+}
+.btn-info {
+	border-radius: 20px;	
+	font-size: 20px;	
+	margin-bottom: 50px;
+	box-shadow: 0 2px 6px 0 rgba(0,0,0,0.15);
+}
+.back-to-top {	
+	cursor: pointer;
+    position: fixed;
+    bottom: 45px;
+    right: 20px;
+	display:none;
+	border-radius: 50%;
+}
+.catalog-tree {
+	list-style-type: none;
+}
+.carousel {	
+	padding: 0 50px;
+	margin-bottom: 60px;
+}
+.carousel .carousel-indicators {
+	bottom: -50px;
+}
+.carousel .carousel-indicators li, .carousel .carousel-indicators li.active {
+	width: 10px;
+	height: 10px;
+	margin: 4px;
+	border-radius: 50%;
+	border: none;
+}
+.carousel .carousel-indicators li {	
+	background: rgba(0, 0, 0, 0.2);
+}
+.carousel .carousel-indicators li.active {	
+	background: #71b0e4;
+}
+.carousel .carousel-control.left, .carousel .carousel-control.right {
+	height: auto;
+	width: 60px;	
+    margin: auto 0;	
+	background-image: none;	
+}
+/* css карточки товара */
+.thumb-wrapper {
+	padding: 	25px 0px;
+	color: 		#747d89;
+	background: #fff;
+	text-align: center;
+	position: 	relative;
+	min-height: 480px;	
+}
+.thumb-wrapper .img-box {
+	height: 220px;	
+	width: 100%;	
+	position: relative;
+	padding: 15px;
+}
+.thumb-wrapper .img-box img {
+	max-height: 200px;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	margin: auto;
+}
+.thumb-wrapper .thumb-content {
+	text-align: left;	
+}
+.thumb-wrapper .thumb-content .sku-card {
+	margin-bottom: 10px;
+	width: 100%;
+	position: absolute;
+	bottom: 0;
+}
+.thumb-wrapper .thumb-content .discount {
+	position: absolute;
+	left: 10px;
+	top: 10px;
+	z-index: 99;
+	cursor: pointer;
+	font-size: 26px;
+	color: #f8130b;	
+}
+.thumb-wrapper .thumb-content .sku-card .item-price {
+	font-size: 15px;	
+	display: flex;
+	justify-content: space-between;
+}
+.thumb-wrapper .thumb-content .sku-card .item-price span {	
+	font-size: 110%;
+}
+.thumb-wrapper .wish-icon {
+	position: absolute;
+	right: 10px;
+	top: 10px;
+	z-index: 99;
+	cursor: pointer;
+	font-size: 26px;
+	color: #abb0b8;
+}
+.thumb-wrapper .wish-icon .fa-heart {
+	color: #ffc000;
+}
+
+.material-switch > input[type="checkbox"] {
+    display: none;   
+}
+
+.material-switch > label {
+    cursor: pointer;
+    height: 0px;
+    position: relative; 
+    width: 40px;  
+}
+
+.material-switch > label::before {
+    background: rgb(0, 0, 0);
+    box-shadow: inset 0px 0px 10px rgba(0, 0, 0, 0.5);
+    border-radius: 8px;
+    content: '';
+    height: 16px;
+    margin-top: -8px;
+    position:absolute;
+    opacity: 0.3;
+    transition: all 0.4s ease-in-out;
+    width: 40px;
+}
+.material-switch > label::after {
+    background: rgb(255, 255, 255);
+    border-radius: 16px;
+    box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.3);
+    content: '';
+    height: 24px;
+    left: -4px;
+    margin-top: -8px;
+    position: absolute;
+    top: -4px;
+    transition: all 0.3s ease-in-out;
+    width: 24px;
+}
+.material-switch > input[type="checkbox"]:checked + label::before {
+    background: inherit;
+    opacity: 0.5;
+}
+.material-switch > input[type="checkbox"]:checked + label::after {
+    background: inherit;
+    left: 20px;
+}

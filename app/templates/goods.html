@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+
+{% block app_content %}    
+    <div class="col-xs-12 col-sm-12 col-md-4 col-lg-4">        
+        <span id="catalog_tree"></span>
+    </div>    
+    <div class="col-xs-12 col-sm-12 col-md-8 col-lg-8">        
+        <h4><b>{{title}}</b></h4>
+        <form class="form-inline">
+            <div class="form-group">
+                <select class="form-control" id="sort_method" style="margin-top: 20px;" >
+                    <option value="null">По умолчанию</option>
+                    <option value="asc">Сначала дешевые</option>
+                    <option value="desc">Сначала дорогие</option>
+                </select>
+            </div>
+            <hr>
+            <div class="form-group">                
+                <div class="material-switch">                    
+                    <input id="switch" type="checkbox" {% if checked %} checked {% endif %}/>
+                    <label for="switch" class="label-info" style="margin-right: 20px;"></label>
+                    Только одинаковые
+                </div>
+            </div>
+            <hr>
+        </form>
+        <span id="html_text">{{ html_text|safe }}</span>        
+        <span id="offset">12</span>
+        {% if show_load_button%}
+            <div style="text-align: center;">
+                <button id="load_button" type="button" class="btn btn-info" style="margin-top: 20px;">ЗАГРУЗИТЬ ЕЩЁ</button>
+            </div>
+        {% endif %}        
+        <a id="back-to-top" href="#" class="btn btn-info back-to-top" role="button"><span class="glyphicon glyphicon-chevron-up"></span></a>
+    </div>
+{% endblock %}
+
+{% block app_scripts %} 
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
+    <script>
+
+        document.getElementById("sort_method").selectedIndex = "0";
+        
+        $('#load_button').click(function() {
+            var
+                _path            = location.pathname.split('/'),
+                _category_number = _path[_path.length-1],
+                _sort_method     = $('#sort_method').val(),
+                _offset          = $('#offset'),
+                _searchParams    = new URLSearchParams(window.location.search),
+                _search_text     = '';
+
+            if (_searchParams.has('search_text')) {
+                _search_text = _searchParams.get('search_text');
+            }
+            
+            $.get("{{ url_for('main.add_loading') }}", {offset: +_offset.text(),
+                                                        sort_method: _sort_method,
+                                                        search_text: _search_text,
+                                                        category_number: _category_number})
+                .done(function(response) {
+                    if (response['html_text'] != '') {
+                        $('#html_text').html($('#html_text').html()+response['html_text']);
+                        _offset.text(+_offset.text()+12);
+                    }
+                    if (response['show_load_button']) {
+                        $('#load_button').show();
+                    } else {
+                        $('#load_button').hide();
+                    }
+                });
+        })
+
+        $('#sort_method').change(function() {
+            var
+                _path            = location.pathname.split('/'),
+                _category_number = _path[_path.length-1],
+                _sort_method     = $(this).val(),
+                _offset          = $('#offset'),
+                _searchParams    = new URLSearchParams(window.location.search),
+                _search_text     = '';
+
+            if (_searchParams.has('search_text')) {
+                _search_text = _searchParams.get('search_text');
+            }
+
+            $.get("{{ url_for('main.add_loading') }}", {offset: 0,
+                                                        sort_method: _sort_method,
+                                                        search_text: _search_text,
+                                                        category_number: _category_number})
+                .done(function(response){
+                    if (response['html_text'] != '') {
+                        $('#html_text').html(response['html_text']);
+                        _offset.text(12);                        
+                    }
+                    if (response['show_load_button']) {
+                        $('#load_button').show();
+                    } else {
+                        $('#load_button').hide();
+                    }
+                });
+        });
+        
+        $('#switch').on('click', function() {
+            if ($(this).is(':checked')) {
+                // устанавливаем значение в сookies 
+                Cookies.set('switch_value', '1');
+            } else {
+                Cookies.remove('switch_value');
+            }
+
+            var
+                _path            = location.pathname.split('/'),
+                _category_number = _path[_path.length-1],
+                _sort_method     = $('#sort_method').val(),
+                _offset          = $('#offset'),
+                _searchParams    = new URLSearchParams(window.location.search),
+                _search_text     = '';
+
+                if (_searchParams.has('search_text')) {
+                    _search_text = _searchParams.get('search_text');
+                }
+
+            $.get("{{ url_for('main.add_loading') }}", {offset: 0,
+                                                        sort_method: _sort_method,
+                                                        search_text: _search_text,
+                                                        category_number: _category_number})
+                .done(function(response){
+                    if (response['html_text'] != '') {
+                        $('#html_text').html(response['html_text']);
+                        _offset.text(12);                        
+                    }
+                    if (response['show_load_button']) {
+                        $('#load_button').show();
+                    } else {
+                        $('#load_button').hide();
+                    }
+                });
+        });
+
+        $(window).scroll(function() {
+            if ($(this).scrollTop() > 50) {
+                $('#back-to-top').fadeIn();
+            } else {
+                $('#back-to-top').fadeOut();
+            }
+        });
+        
+        $('#back-to-top')
+            .click(function () {
+                $('#back-to-top').tooltip('hide');
+                $('body, html').animate({
+                    scrollTop: 0 // scroll body to 0px on click
+                }, 800);
+                return false;
+            })
+            .tooltip('show');
+        
+        // заполнение категорий товаров
+        $.get("{{ url_for('main.get_catalog_tree') }}")
+            .done(function(response) {
+                $('#catalog_tree').html(response);
+                $('#catalog_tree_modal').html(response);
+            });
+
+        
+        function myFunction() {
+            if($(window).width() < 992)
+            {
+                $('#categories_button').css('display', 'inline');
+                $('#catalog_tree').hide();
+            }
+            else
+            {
+                $('#categories_button').css('display', 'none');
+                $('#catalog_tree').show();
+            }
+        }
+        
+        myFunction();
+        
+        $(window).resize(function() {
+            waitForFinalEvent(function() {
+                myFunction();
+            }, 500, "Arxm4g810efYsQQl/e45уd");
+        });
+        
+    </script>
+    
+{% endblock %}

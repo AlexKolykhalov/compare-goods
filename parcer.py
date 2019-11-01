@@ -1,0 +1,885 @@
+from app import redis_store, db
+from app.models import Sku, News
+
+from fuzzywuzzy import fuzz
+from threading  import Thread
+from datetime   import datetime as dt, timedelta
+from bs4        import BeautifulSoup
+from string     import ascii_uppercase, ascii_lowercase, digits
+from random     import choices
+from sqlalchemy import desc
+from difflib    import Differ # ?????
+
+import requests, json
+
+
+# Мидии VICI Любо есть маринованные в масле Россия, 200г (LENTA) 88 Мидии Vici Любо есть копченые в масле 200г (PEREKRESTOK) (token set ratio: 88)
+s = 'Чипсы Lays Из печи Нежный сыр с зеленью 85г'
+s1 = 'Чипсы LAYS со вкусом Нежный сыр с зеленью Россия, 85г'
+
+token_set_ratio = fuzz.token_set_ratio(s, s1)
+sa = [1,2,3,4,1]
+# v = 0
+# for elem in sa[v:len(sa)]:
+#         k = v + 1
+#         d = k        
+#         for elem1 in sa[k:len(sa)]:            
+#             if elem == elem1:
+#                 del sa[d]
+#             else:                
+#                 print(elem, elem1)
+#                 print('index:', sa.index(elem), sa.index(elem1))
+#             d += 1
+#         v += 1
+
+
+def get_data_slider(markets): # нужно ли?(слайдеры на первых страницах)
+    data_slider = {}
+    data_slider_lenta = []
+    data_slider_perekrestok = []
+    data_slider_5ka = []
+    session = requests.Session()
+    if 'lenta' in markets:
+        number = 0
+        url    = 'https://lenta.com'
+        page   = session.get(url)
+        slides = BeautifulSoup(page.content, 'html.parser').find_all('a', {'class': 'slider-block__slide'})
+        for slide in slides:
+            href   = slide['href']
+            if slide['href'][0] == '/':
+                href = url+slide['href']
+            src    = slide.find('img', {'class': 'slider-block__img'})['src']            
+            data_slider_lenta.append({'href': href, 'img_src': src, 'number': number})
+            number += 1
+        data_slider['lenta'] = data_slider_lenta
+        data_slider['lenta'] = data_slider_lenta
+    if 'perekrestok' in markets:
+        # url = 'https://www.perekrestok.ru'
+        # page = session.get(url)
+        # slides = BeautifulSoup(page.content, 'html.parser').find_all('ul', {'class': 'xf-mp-main-offer__list js-xf-main-carousel__list swiper-wrapper xf-b js-xf-b _main'})
+        # for slide in slides:
+        #     li = slide.find_all('li')
+        #     for lil in li:
+        #         pass
+        pass
+    if '5ka' in markets:
+        number = 0
+        session.get('https://5ka.ru')
+        kwargs = {'domain': '5ka.ru'}
+        cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
+        session.cookies.set_cookie(cookie)
+        slides = session.get('https://5ka.ru/api/index/index_banners/').json()
+        for slide in slides['items']:
+            data_slider_5ka.append({'href': slide['link'], 'img_src': slide['image_url'], 'number': number})
+            number += 1
+        data_slider['5ka'] = data_slider_5ka
+    return data_slider
+
+
+def PEREKRESTOK():
+    if redis_store.get('PEREKRESTOK'):
+        perekrestok_category_skus = json.loads(redis_store.get('PEREKRESTOK'))
+        return perekrestok_category_skus
+    # ПЕРЕКРЁСТОК
+    session = requests.Session()
+    num_page = 1
+    _all = 0
+    _in  = 0
+    perekrestok_category_skus = {}    
+    while True:
+        url = 'https://www.perekrestok.ru/assortment?page='+str(num_page)+'&sort=rate_desc'
+        page = session.get(url)
+        products = BeautifulSoup(page.content, 'html.parser').find_all('div', {'class': ['xf-product js-product _not-online', 'xf-product js-product _not-active _not-online']})
+        if len(products) == 0:
+            break
+        for product in products:        
+            category = get_category(product['data-gtm-category-name'])        
+            if category == '':
+                _all += 1
+                continue        
+            product_name = product['data-gtm-product-name'].replace('ё', 'е')
+            
+            # product_link = product.find('a', {'class': 'xf-product-title__link js-product__title'})['href']
+            # product_page = session.get('https://www.perekrestok.ru'+product_link)
+            # products_content = BeautifulSoup(product_page.content, 'html.parser')
+            # for row in products_content.find_all('tr', {'class': 'xf-product-table__row'}):
+            #     if row.find('th', {'class': 'xf-product-table__col-header'}).text.strip() == 'Торговая марка':
+            #         product_brand = row.find('td', {'class': 'xf-product-table__col'}).text.strip()
+            #         print(product_brand)
+            #         break
+
+            try:
+                new_price = "{:.2f}".format(float(product.find('div', {'class': 'xf-price xf-product-cost__current js-product__cost _highlight'})['data-cost']))
+                old_price = "{:.2f}".format(float(product.find('div', {'class': 'xf-price xf-product-cost__prev'})['data-cost']))
+                discount_text = product.find('div', {'class': 'xf-product-cost__old-price'}).find('p').text
+                discount = int(discount_text[1:len(discount_text)-1])
+            except TypeError:
+                # записываем новую цену равной старой, т.к. скидки не оказалось 
+                new_price = "{:.2f}".format(float(product.find('div', {'class': 'xf-price xf-product-cost__current js-product__cost'})['data-cost']))
+                old_price = "{:.2f}".format(float(product.find('div', {'class': 'xf-price xf-product-cost__current js-product__cost'})['data-cost']))
+                discount = 0
+            product_img = product.find('img', {'class': 'js-lazy swiper-lazy xf-product-picture__img'})['data-src']
+            product_href = product.find('a', {'class': 'xf-product-title__link js-product__title'})['href']
+            weight = product_name.split(' ')[len(product_name.split(' '))-1]
+            perekrestok_skus = {'name': product_name,
+                                'img': product_img,
+                                'href': 'https://www.perekrestok.ru'+product_href,
+                                'new_price': new_price,
+                                'old_price': old_price,
+                                'discount': discount,
+                                'weight': weight,
+                                'type': '(PEREKRESTOK)',
+                                'indicator': 0, # индикатор, кот. показывает есть ли товар в списке похожих товаров
+                                'favicon': 'https://www.perekrestok.ru/favicon.ico'} # << -- подумать над мерой измерения            
+            if category in perekrestok_category_skus.keys():
+                perekrestok_category_skus[category].append(perekrestok_skus)
+            else:
+                perekrestok_category_skus[category] = [perekrestok_skus]            
+            _all += 1
+            _in += 1
+        num_page += 1
+    print('Всего товаров в ПЕРЕКРЁСТОК:', _all, 'Внесено:', _in)
+    redis_store.set('PEREKRESTOK', json.dumps(perekrestok_category_skus))
+    return perekrestok_category_skus
+    
+
+
+    # # КРУПА
+    # session = requests.Session()
+    # k = 0
+    # krupa_category_skus = {}
+    # page = session.get('https://www.krupa.promo')
+    # product_categories = BeautifulSoup(page.content, 'html.parser').find_all('div', {'class': 'category'})
+    # for product_category in product_categories:
+    #     url_page = product_category.find('a')['href']
+    #     print(url_page)
+    #     url = 'https://www.krupa.promo'+url_page
+    #     page = session.get(url)        
+    #     products = BeautifulSoup(page.content, 'html.parser').find_all('div', {'class': 'product' })
+    #     product_category = BeautifulSoup(page.content, 'html.parser').find('h1').text
+    #     category = get_category(product_category)
+    #     krupa_category_skus[category] = []
+    #     for product in products:        
+    #         product_name = product.find('h3').text            
+    #         product_cost = product.find('div', {'class': 'price col-8 text-right'}).text.replace('.–', '.00')            
+    #         product_type = product.find('span', {'class': 'measure'}).text
+    #         krupa_skus = {'name': product_name, 'cost': product_cost, 'type': product_type}        
+    #         krupa_category_skus[category].append(krupa_skus)        
+    #         k += 1        
+    # print('Всего товаров в КРУПА:', k)
+
+    # METRO
+
+def PKA(): # если разбить категории на подкатегории, то можно будет избавиться от двойного кода
+    if redis_store.get('PKA'):
+        pka_category_skus = json.loads(redis_store.get('PKA'))
+        return pka_category_skus
+    # ПЯТЁРОЧКА
+    session = requests.Session()
+    session.get('https://5ka.ru')
+    kwargs = {'domain': '5ka.ru'}
+    cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
+    session.cookies.set_cookie(cookie)
+    groups = session.get('https://5ka.ru/api/v2/categories/').json()
+    pka_category_skus = {}
+    for group in groups:    
+        category = get_category(group['parent_group_name'])
+        if category == '':
+            subgroups = session.get('https://5ka.ru/api/v2/categories/'+group['parent_group_code']).json()
+            for subgroup in subgroups:
+                category = get_category(subgroup['group_name'])
+                if category == '':
+                    continue
+                if category not in pka_category_skus.keys():
+                    pka_category_skus[category] = []
+                url = 'https://5ka.ru/api/v2/special_offers/?categories='+subgroup['group_code']+'&ordering=&page=1&price_promo__gte=&price_promo__lte=&records_per_page=12&search=&store='
+                k = 0
+                while True:
+                    get = session.get(url).json()
+                    for skus in get['results']:
+                        name = costruct_name(skus['name'])
+                        weight = name.split(' ')[len(name.split(' '))-1]
+                        pka_skus = {'name': name,
+                                    'img': skus['img_link'],
+                                    'href': 'https://5ka.ru/special_offers/'+str(skus['id']),
+                                    'new_price': "{:.2f}".format(float(skus['current_prices']['price_promo__min'])),
+                                    'old_price': "{:.2f}".format(float(skus['current_prices']['price_reg__min'])),
+                                    'discount': round((skus['current_prices']['price_reg__min']-skus['current_prices']['price_promo__min'])/skus['current_prices']['price_reg__min']*100),
+                                    'weight': weight,
+                                    'type': '(5KA)',
+                                    'indicator': 0, # индикатор, кот. показывает есть ли товар в списке похожих товаров
+                                    'favicon': 'https://5ka.ru/img/icons/favicon-32x32.png'} # << -- подумать над мерой измерения 
+                        pka_category_skus[category].append(pka_skus)
+                        k += 1                    
+                    url = get['next']
+                    if url == None:
+                        break                
+                print('ПЯТЁРОЧКА кат. '+category+' ('+subgroup['group_name']+') внесено:', k)
+        else:
+            if category not in pka_category_skus.keys():
+                pka_category_skus[category] = []
+            url = 'https://5ka.ru/api/v2/special_offers/?categories='+group['parent_group_code']+'&ordering=&page=1&price_promo__gte=&price_promo__lte=&records_per_page=12&search=&store='
+            k = 0
+            while True:
+                try:
+                    get = session.get(url).json()
+                except:
+                    s = 0
+                for skus in get['results']:                
+                    name = costruct_name(skus['name'])
+                    weight = name.split(' ')[len(name.split(' '))-1]
+                    pka_skus = {'name': name, 
+                                'img': skus['img_link'],                                
+                                'href': 'https://5ka.ru/special_offers/'+str(skus['id']),
+                                'new_price': "{:.2f}".format(float(skus['current_prices']['price_promo__min'])),
+                                'old_price': "{:.2f}".format(float(skus['current_prices']['price_reg__min'])),
+                                'discount': round((skus['current_prices']['price_reg__min']-skus['current_prices']['price_promo__min'])/skus['current_prices']['price_reg__min']*100),
+                                'weight': weight, 
+                                'type': '(5KA)',
+                                'indicator': 0, # индикатор, кот. показывает есть ли товар в списке похожих товаров
+                                'favicon': 'https://5ka.ru/img/icons/favicon-32x32.png'} # << -- подумать над мерой измерения
+                    pka_category_skus[category].append(pka_skus)
+                    k += 1
+                url = get['next']
+                if url == None:
+                    break            
+            print('ПЯТЁРОЧКА кат. '+category+' ('+group['parent_group_name']+') внесено:', k)
+    redis_store.set('PKA', json.dumps(pka_category_skus))
+    return pka_category_skus
+
+def LENTA():
+    if redis_store.get('LENTA'):
+        lenta_category_skus = json.loads(redis_store.get('LENTA'))
+        return lenta_category_skus    
+    # ЛЕНТА
+    session = requests.Session()
+    session.headers = {'Accept': 'application/json',                
+                    'Content-Type': 'application/json',                
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0'}
+
+    for name, value in [('CityCookie', 'lpc'), ('lentaT2', 'lpc'), ('Store', '0148')]:    
+        kwargs = {'domain': 'lenta.com'}
+        cookie = requests.cookies.create_cookie(name, value, **kwargs)
+        session.cookies.set_cookie(cookie)
+
+    page = session.get('https://lenta.com/catalog/')
+    lenta_category_skus = {}
+
+    if page.status_code == 200:
+        menu = json.loads(BeautifulSoup(page.content, 'html.parser').find('div', {'class': 'header__catalog-menu-container'})['data-menu'])
+        for group in menu['groups']:
+            for group_category in group['childNodes']:
+                offset     = 0
+                limit      = 50        
+                category = get_category(group_category['name'])        
+                if category == '':
+                    continue
+                if category not in lenta_category_skus.keys():
+                    lenta_category_skus[category] = []
+                k = 0
+                while True:
+                    param = {
+                        "nodeCode": group_category['code'],
+                        "filters": [],
+                        "tag": "",
+                        "pricesRange": 'null',
+                        "sortingType": "ByPriority",
+                        "offset": offset,
+                        "limit": limit
+                    }
+                    try:
+                        post = session.post('https://lenta.com/api/v1/skus/list', json=param).json()
+                    except json.JSONDecodeError:
+                        print('--->', group_category['name'], 'offset', offset, 'limit', limit)
+                        continue
+                    if len(post['skus']) == 0:
+                        break    
+                    for skus in post['skus']:
+                        title    = skus['title'].replace('ё', 'е').replace("'", '').replace('.', '')
+                        subtitle = skus['subTitle'].strip().replace(' г', 'г').replace(' кг', 'кг').replace(' шт', 'шт').replace(' уп', 'уп')                        
+                        weight  = subtitle.split(', ')[len(subtitle.split(', '))-1]
+                        weight = '' if weight == '' or weight[0] not in list(digits) else weight                        
+                        origin_name = title+' '+weight
+                        name = ' '.join(origin_name.split())                        
+                        lenta_skus = {'name': name,
+                                      'img': skus['imageUrl'] if skus['imageUrl'] else 'https://lenta.gcdn.co/static/pics/image-default--thumb.305ca150c22262acb4c40de317e93d1a.png',
+                                      'href': 'https://lenta.com'+skus['skuUrl'],
+                                      'new_price': "{:.2f}".format(float(skus['cardPrice']['value'])),
+                                      'old_price': "{:.2f}".format(float(skus['regularPrice']['value'])),
+                                      'discount': skus['promoPercent'],
+                                      'weight': weight,
+                                      'type': '(LENTA)',
+                                      'indicator': 0, # индикатор, кот. показывает есть ли товар в списке похожих товаров
+                                      'favicon': 'https://lenta.gcdn.co/static/pics/shortcuts/favicon-32x32.fb90679fd6d6da31ec7059b1cd4985e1.png'} # << -- подумать над мерой измерения
+                        lenta_category_skus[category].append(lenta_skus)
+                        k += 1
+                    offset = offset + limit
+                print('ЛЕНТА кат. '+category+' ('+group_category['name']+') внесено:', k)
+    else:
+        print('LENTA', page.status_code, page.reason)
+    redis_store.set('LENTA', json.dumps(lenta_category_skus))
+    return lenta_category_skus
+
+
+
+def get_news():
+    news = db.session.query(News).get(1)
+    if news and news.date_news.day == dt.now().day:
+        return news.html_news
+    
+    news_lenta       = ''
+    news_perekrestok = ''
+    news_pka         = ''
+    
+    #lenta
+    session = requests.Session()
+    session.headers = {'Accept': 'application/json',                
+                       'Content-Type': 'application/json',                
+                       'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0'}
+
+    for name, value in [('CityCookie', 'lpc'), ('lentaT2', 'lpc'), ('Store', '0148')]:    
+        kwargs = {'domain': 'lenta.com'}
+        cookie = requests.cookies.create_cookie(name, value, **kwargs)
+        session.cookies.set_cookie(cookie)
+
+    page = session.get('https://lenta.com/goods-actions/')    
+    lenta_news_content = BeautifulSoup(page.content, 'html.parser').find_all('div', {'class': 'news-item__content'})
+    for news_content in lenta_news_content:        
+        news_date = news_content.find('div', {'class': 'news-item__date'}).text.replace('\r\n', '').replace(' ', '')
+        today = dt.today().strftime('%d.%m.%Y')        
+        if news_date == today:
+            news_title       = news_content.find('h3', {'class': 'news-item__title'}).text.replace('\r\n', '').strip()
+            news_description = news_content.find('div', {'class': 'news-item__description'}).text.replace('\r\n', '').strip()
+            news_href        = news_content.find('div', {'class': 'news-item__more'}).find('a', {'class': 'link'})['href']
+            news_html        = '<hr><b>'+news_title+'</b><br>'+news_description+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
+            news_lenta       = news_lenta + news_html
+    #perekrestok    
+    session = requests.Session()
+    page = session.get('https://www.perekrestok.ru/promos')
+    perekrestok_news_content = BeautifulSoup(page.content, 'html.parser').find_all('li', {'class': 'xf-promo__item'})
+    for news_content in perekrestok_news_content:
+        news_href              = news_content.find('a')['href']
+        page_news              = session.get(news_href)
+        page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
+        news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
+    #pka
+    session = requests.Session()
+    session.get('https://5ka.ru')
+    kwargs = {'domain': '5ka.ru'}
+    cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
+    session.cookies.set_cookie(cookie)
+    pka_news_content = session.get('https://5ka.ru/api/news/').json()
+    pka_news_array   = pka_news_content['results'][:4]
+    for news_content in pka_news_array:
+        news_pka = news_pka+'<hr>'+news_content['preview_text']+'<br><a href="https://5ka.ru/news/'+str(news_content['id'])+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
+    
+    
+    news_array = '''<ul class="nav nav-tabs">
+                        <li class="active"><a data-toggle="tab" href="#news_lenta"><img src="https://lenta.gcdn.co/static/pics/shortcuts/favicon-32x32.fb90679fd6d6da31ec7059b1cd4985e1.png"></a></li>
+                        <li><a data-toggle="tab" href="#news_perekrestok"><img src="https://www.perekrestok.ru/favicon.ico"></a></li>
+                        <li><a data-toggle="tab" href="#news_pka"><img src="https://5ka.ru/img/icons/favicon-32x32.png"></a></li>
+                    </ul>
+                    <div class="tab-content" style="margin-bottom: 20px;">
+                        <div id="news_lenta" class="tab-pane fade in active">
+                            {news_lenta}
+                        </div>
+                        <div id="news_perekrestok" class="tab-pane fade">
+                            {news_perekrestok}
+                        </div>
+                        <div id="news_pka" class="tab-pane fade">
+                            {news_pka}
+                        </div>
+                    </div>'''.format(news_lenta=news_lenta, news_perekrestok=news_perekrestok, news_pka=news_pka)    
+    
+    if news:
+        news.html_news = news_array
+        news.date_news = dt.now()
+    else:
+        news = News(html_news=news_array, date_news=dt.now())    
+        db.session.add(news)
+        
+    db.session.commit()
+
+    return news_array
+
+def get_catalog():
+    goods = {
+        'Выпечка': ['Выпечка', 'Наша пекарня'],
+        'Заправки__соусы': ['Маринады',
+                           'Наборы для приготовления блюд',
+                           'Растительные масла',
+                           'Соусы, Майонезы и кетчуп',
+                           'Заправки, соусы',
+                           'Майонезы и майонезные заправки',
+                           'Уксус',
+                           'Томатные пасты, кетчуп',
+                           'Соусы',
+                           'Растительное масло',
+                           'Майонез',
+                           'Горчица, хрен'],
+        'Каши': ['Сухие завтраки',
+                 'Хлопья и каши',
+                 'Подушечки, мюсли, хлопья',
+                 'Каши',
+                 'Каши и сухие смеси'],
+        'Колбасные_изделия': ['Колбасные изделия',
+                              'Колбасные изделия и мясные деликатесы',
+                              'Сосиски и сардельки',
+                              'Сосиски, сардельки, шпикачки',
+                              'Колбасы, ветчина',
+                              'Паштеты, зельцы',
+                              'Деликатесы и копчености'],
+        'Кондитерские_изделия': ['Сезонные кондитерские изделия',
+                                 'Мучные кондитерские изделия',
+                                 'Кондитерские изделия собственного производства',
+                                 'Печенье, пряники, вафли',
+                                 'Пироги, сдоба, кексы, рулеты',
+                                 'Печенье, крекер, вафли, пряники'],
+        'Консервация': ['Консервация',
+                        'Консервированные овощи',
+                        'Консервы рыбные',
+                        'Фруктовые и ягодные консервы',
+                        'Рыбные консервы и кулинария',
+                        'Овощные консервы',
+                        'Мёд',
+                        'Мясные консервы',
+                        'Варенье, джемы, сиропы'],
+        'Конфеты': ['Конфеты',
+                    'Конфеты, леденцы и жевательные резинки',
+                    'Жевательная резинка'],
+        'Крупы': ['Крупы, рис', 'Крупы и зерновые', 'Крупы и бобовые'],
+        'Макароны': ['Макаронные изделия', 'Макароны, паста'],
+        'Масло__маргарин': ['Масло, маргарин', 'Сливочное масло и маргарин', 'Масло, маргарин, спред'],
+        'Молочная_продукция': ['Молочная продукция',
+                               '"Йогурты*\n* Кроме йогуртов для детей"',
+                               'Кефир, кисломолочные продукты',
+                               'Молоко',
+                               'Сметана',
+                               'Сырки глазированные',
+                               '"Творог и творожные продукты*\n* Кроме творожных продуктов дл',
+                               'Творог, сырки',
+                               'Сливки',
+                               'Сгущенка, молочные консервы',
+                               'Молочные продукты',
+                               'Молочные коктейли и лакомства',
+                               'Кисломолочные продукты и закваски',
+                               'Йогурты, творожки, десерты'],
+        'Мороженое': ['Мороженое'],
+        'Мука': ['Мука блинная', 'Мука пшеничная', 'Мука ржаная', 'Все для выпечки', 'Мука', 'Компоненты для выпечки'],
+        'Мясо': ['Мясо охлажденное',
+                 'Охлажденные мясные субпродукты',
+                 'Мясные продукты собственного производства',
+                 'Продукты мясной переработки',
+                 'Мясо глубокой заморозки',
+                 'Фарш',
+                 'Свинина',
+                 'Говядина'],
+        'Овощи': ['Томаты, перец и огурцы свежие', 'Овощи', 'Овощи и смеси', 'Зелень и  салаты', 'Грибы'], # << --- зелень и__салаты так и надо
+        'Полуфабрикаты': ['Полуфабрикаты',
+                          'Готовые блюда',
+                          'Пельмени, манты, хинкали',
+                          'Блины, вареники, сырники',
+                          'Замороженные кондитерские изделия',
+                          'Пельмени',
+                          'Пицца, вареники, пельмени, блины',
+                          'Котлеты, наггетсы, тесто'],
+        'Продукты_быстрого_приготовления': ['Продукты быстрого приготовления', 'Другие'], # <<---- в кат. Другие есть корма для жив., сух. завтраки, соки и мнг. другое
+        'Птица': ['Курица',
+                  'Индейка',
+                  'Птица глубокой заморозки',
+                  'Охлажденное мясо птицы',
+                  'Субпродукты',                # <<< ------ !! возможно в отдельную категорию Субпродукты (пока есть только в перекрестке)
+                  'Мясо, птица и субпродукты',  # <<< ------ !! возможно отдельная категория (пока есть только в перекрестке)
+                  'Мясо птицы',
+                  'Яйцо',
+                  'Яйца'],
+        'Рыбная_продукция': ['Охлажденная и переработанная рыбная продукция',
+                             'Готовая рыбная продукция',
+                             'Рыба и морепродукты глубокой заморозки',
+                             'Соленая, маринованная рыба',
+                             'Рыба',
+                             'Охлажденная рыба ', #<< -- так и должно быть
+                             'Крабовое мясо и палочки',
+                             'Копченая рыба',
+                             'Вяленая, сушеная рыба и морепродукты'], # <<< --- в ПЯТЁРОЧКЕ в ДРУГИЕ есть суш рыба
+        'Рыбные_деликатесы': ['Деликатесы из рыбы и морепродуктов',
+                              'Деликатесы из рыбы и морепродуктов в рассоле/масле',
+                              'Морепродукты',
+                              'Морепродукты и креветки',
+                              'Икра'],
+        'Cладости': ['Зефир, мармелад, восточные сладости',
+                     'Зефир, мармелад и пастила',
+                     'Зефир, мармелад, пастила',
+                     'Восточные сладости, халва'],
+        'Соль__cахар': ['Сахар, соль',
+                       'Сахар-песок',
+                       'Сахар-рафинад',
+                       'Сахар тростниковый',
+                       'Соль морская',
+                       'Соль поваренная',
+                       'Соль',
+                       'Сахар'],
+        'Cпеции': ['Приправы, специи',
+                   'Специи',
+                   'Универсальные специи',
+                   'Приправы',
+                   'Смеси для вторых блюд',
+                   'Специи и приправы'],
+        # 'Нац_кухня': ['Продукты национальной кухни'], есть только в ЛЕНТЕ, содержит и макароны и специи и соусы и кокос молоко и много другое
+        'Сухофрукты__орехи__семечки': ['Сухофрукты, орехи, семечки',
+                                     'Семечки и орехи',
+                                     'Семечки, сухофрукты',
+                                     'Орехи'],
+        'Сыры': ['Сыр', 'Мягкие и творожные сыры', 'Твердые сыры', 'Сыры'],
+        'Торты': ['Торты, пирожные, выпечка', 'Торты, пирожные и десерты', 'Торты, пирожные'],
+        'Фрукты': ['Цитрусовые фрукты', 'Яблоки', 'Бананы', 'Фрукты', 'Ягоды и фрукты', 'Ягоды'],
+        'Хлеб': ['Хлеб', 'Хлеб, лаваш, лепешки'],
+        'Хлебобулочные_изделия': ['Хлебобулочные изделия', 'Сушки, сухари, хлебцы'],
+        'Чипсы__сухарики__снеки': ['Чипсы, сухарики, снеки', 'Чипсы и сухарики', 'Чипсы, снеки, попкорн'],
+        'Шоколад': ['Шоколад', 'Шоколад и шоколадные изделия', 'Шоколад, батончики']
+        }    
+    return goods
+
+def get_category(category_name):
+    goods = get_catalog()
+    for key, values in goods.items():
+        if category_name in values:
+            return key
+    return ''
+
+def costruct_name(name):
+    costruct_name = name.replace('.', ' ')\
+                        .replace(',', ' ')\
+                        .replace('"', ' ')\
+                        .replace('/', ' ')\
+                        .replace("'", '')\
+                        .replace('ё', 'е')\
+                        .replace(' г', 'г')\
+                        .replace(' мл', 'мл')\
+                        .replace(' кг', 'кг')\
+                        .replace(' шт', 'шт')\
+                        .replace(' уп', 'уп')
+    
+    return ' '.join(costruct_name.split())
+
+# варианты сортировок
+def by_discount(elem):
+    if 'prod' in elem.keys():
+        max_discount = 0
+        for prod in elem['prod']:
+            if prod['discount']>max_discount:
+                max_discount = prod['discount']
+        return max_discount
+    
+    return elem['discount']
+
+def by_price(elem):
+    max_price = 0    
+    price = elem['old_price'] if elem['new_price'] == '0.00' else elem['new_price']
+    if float(price)>max_price:
+        max_price = float(price)
+    return max_price
+
+
+
+
+def get_html_product(product_array, index, key, reverse):
+    ul = ''
+    div = ''    
+    sort_product_array = sorted(product_array, key=key, reverse=reverse)
+    for row in sort_product_array:
+        row_index = str(sort_product_array.index(row))
+        tab_href = index+'_'+row_index
+        class_active = 'class="active"' if row_index == '0' else ''
+        in_active = 'in active' if row_index == '0' else ''
+        li ='''<li {class_active}>
+                    <a data-toggle="tab" href="#{tab_href}">
+                        <img src="{favicon}">
+                    </a>
+                </li>'''.format(class_active=class_active, tab_href=tab_href, favicon=row['favicon'])
+        
+        tab_content = '''<div id="{tab_href}" class="tab-pane fade {in_active}">
+                            <div class="thumb-wrapper">
+                                <span id='heart' class="wish-icon"><i class="fa fa-heart-o"></i></span>
+                                <div class="img-box">
+                                    <img src="{img}" class="img-responsive" alt="">
+                                </div>
+                                <div class="thumb-content">
+                                    <a href="{href}" target="_blank"><h4>{name}</h4></a>
+                                    <p class="discount"><b>-{discount}%</b></p>
+                                    <div class="sku-card">
+                                        <p class="item-price">Новая цена: <b><span>{new_price}<span></b></p>
+                                        <p class="item-price">Старая цена: <span>{old_price}</span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>'''.format(in_active=in_active,
+                                         tab_href=tab_href,
+                                         img=row['img'],
+                                         href=row['href'],
+                                         name=row['name'], 
+                                         new_price=row['new_price'],
+                                         old_price=row['old_price'],
+                                         discount=row['discount'])
+        ul = ul + li
+        div = div + tab_content
+    
+    product_html = '''<ul class="nav nav-tabs">{ul}</ul>
+                      <div class="tab-content">{div}</div>'''.format(ul=ul, div=div)
+
+    return product_html
+
+def html_creator(sort_method, category_number, offset, count_of_products, products_per_row, add_loading, checked=None, search_text=None, sku=None):
+
+    if sku:
+        sorted_products = db.session.query(Sku).get(sku).sku_html_1
+        html_text = '<div class="row"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-3">'+sorted_products+'</div></div>'
+        return {'html_text': html_text, 'show_load_button': False}
+    else:
+        if sort_method == 'null':
+            if category_number:
+                if checked:
+                    sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_category==category_number, Sku.sku_twin==1).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
+                else:
+                    sorted_products = db.session.query(Sku.sku_html_1).filter_by(sku_category=category_number).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
+            else:
+                if checked:
+                    if search_text:
+                        sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_twin==1, Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
+                    else:                        
+                        sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_twin==1).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
+                else:
+                    if search_text:
+                        sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
+                    else:
+                        sorted_products = db.session.query(Sku.sku_html_1).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()        
+        elif sort_method == 'asc':
+            if category_number:
+                if checked:
+                    sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_category==category_number, Sku.sku_twin==1).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
+                else:
+                    sorted_products = db.session.query(Sku.sku_html_2).filter_by(sku_category=category_number).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
+            else:
+                if checked:
+                    if search_text:
+                        sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_twin==1, Sku.sku_lowercase.like(search_text)).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
+                    else:
+                        sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_twin==1).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
+                else:
+                    if search_text:
+                        sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_lowercase.like(search_text)).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
+                    else:
+                        sorted_products = db.session.query(Sku.sku_html_2).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
+        elif sort_method == 'desc':
+            if category_number:
+                if checked:
+                    sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_category==category_number, Sku.sku_twin==1).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
+                else:
+                    sorted_products = db.session.query(Sku.sku_html_3).filter_by(sku_category=category_number).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
+            else:
+                if checked:
+                    if search_text:
+                        sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_twin==1, Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
+                    else:
+                        sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_twin==1).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
+                else:
+                    if search_text:
+                        sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
+                    else:
+                        sorted_products = db.session.query(Sku.sku_html_3).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
+    
+    html_text_carousel_indicators, html_text_carousel_inner, html_text, group_of_products = '', '', '', ''
+    indexes = [i for i in range(products_per_row-1, count_of_products, products_per_row)] # получаем индексы, кот. помогают разбивать товары для слайда/строки
+
+    for product_array in sorted_products[0:12]:
+        product_index = sorted_products.index(product_array) # !!!!
+        if add_loading:
+            product = '<div class="col-xs-12 col-sm-6 col-md-6 col-lg-3">' + product_array[0] + '</div>'
+        else:
+            product = '<div class="col-sm-{size}">'.format(size=int(count_of_products/products_per_row)) + product_array[0] + '</div>'
+        group_of_products = group_of_products + product
+        if product_index in indexes:
+            if add_loading:
+                html_text = html_text + '<div class="row">' + group_of_products + '</div>'
+            else:
+                number_index = indexes.index(product_index)
+                if number_index == 0:
+                    html_text_carousel_indicators = '<li data-target="#myCarousel1" data-slide-to="0" class="active"></li>'
+                    html_text_carousel_inner = '<div class="item carousel-item active">'+group_of_products+'</div>'
+                else:
+                    html_text_carousel_indicators = html_text_carousel_indicators + '<li data-target="#myCarousel1" data-slide-to="{}"></li>'.format(number_index)
+                    html_text_carousel_inner = html_text_carousel_inner + '<div class="item carousel-item">'+group_of_products+'</div>'
+            group_of_products = ''
+    
+    if len(group_of_products) > 0:
+        html_text = html_text + '<div class="row">' + group_of_products + '</div>'
+    
+    show_load_button = True
+    if len(sorted_products) < 13:
+        show_load_button = False
+    
+    return {'carousel_indicators': html_text_carousel_indicators, 'carousel_inner': html_text_carousel_inner, 'html_text': html_text, 'show_load_button': show_load_button}
+
+def main_search():
+    
+    s = 'Напиток сывороточный NEO МАЖИТЭЛЬ с соком Мажитэль J7 арбуз-дыня ПЭТ 950г'
+    s1 = 'Напиток молочно-соковый Мажитэль Арбуз и Дыня 950г'
+    token_set_ratio1 = fuzz.token_set_ratio(s, s1)
+    token_set_ratio2 = fuzz.token_sort_ratio(s, s1)
+    seqMatch1 = fuzz.SequenceMatcher(lambda x: x == " ", s, s1).ratio() #
+    seqMatch2 = fuzz.SequenceMatcher(lambda x: x == " ", s, s1).quick_ratio() #
+    seqMatch3 = fuzz.SequenceMatcher(None, s, s1).real_quick_ratio() #
+
+    # s = SequenceMatcher(lambda x: x == " ", "private Thread currentThread;", "private volatile Thread currentThread;")
+    # x in ['с', 'из печи', 'со вкусом', ' ']
+    # seqMatch = fuzz.SequenceMatcher(lambda x: x in ['со', 'вкусом', 'из', 'печи'], s, s1)
+    # rqr = seqMatch(None, s, s1).real_quick_ratio()
+    # differ = Differ()
+    # d = list(differ.compare(s, s1))
+    
+    lenta_category_skus       = LENTA()
+    perekrestok_category_skus = PEREKRESTOK()
+    pka_category_skus         = PKA()
+
+    # удаляем все записи в таблице Sku
+    db.session.query(Sku).delete()
+    db.session.commit()
+
+    # # async
+    beg             = dt.now()    
+    _all            = 0 # общее число внесенных товаров
+    _total          = 0 # общее число товаров
+    category_number = 0 # счетчик для нумерования категорий товара
+    common_base     = []    
+    test_base       = {} # !!! delete
+    
+    for category in get_catalog().keys():
+        lenta       = []
+        perekrestok = []
+        pka         = []
+        if category in lenta_category_skus.keys():
+            lenta = lenta_category_skus[category]
+        if category in perekrestok_category_skus.keys():
+            perekrestok = perekrestok_category_skus[category]
+        if category in pka_category_skus.keys():
+            pka = pka_category_skus[category]
+                
+        print('Объдиняем категорию:', category)
+        
+        start = dt.now()
+        
+        # s = dt.now()
+        k   = 0
+        _in = 0
+        category_base = []        
+        arrays = [lenta, perekrestok, pka]
+        for arr1 in arrays:
+            k += 1
+            for elem1 in arr1:
+                if elem1['indicator'] == 1:
+                    continue
+                product = []
+                product.append(elem1)
+                _total += 1
+                for arr2 in arrays[k:len(arrays)]:
+                    index_token_set_ratio = 0
+                    for elem2 in arr2:
+                        # сравнение элементов на схожесть
+                        if elem1['weight'] != elem2['weight']:
+                            continue
+                        # первый способ сравнения
+                        token_set_ratio = fuzz.token_set_ratio(elem1['name'], elem2['name'])
+                        if token_set_ratio > index_token_set_ratio:
+                            index_token_set_ratio = token_set_ratio
+                            goods_token_set_ratio = elem2['name']
+                            type_token_set_ratio  = elem2['type']
+                            if token_set_ratio == 100: # если 100% совпадение, то дальше не нужно сравнивать
+                                break
+                    if index_token_set_ratio == 100:
+                        elem2['indicator'] = 1 # elem2 внесен в похожие товары, вносить его еще раз в массив product не имеет смысла
+                        product.append(elem2)
+                        print('<<<<<', elem1['name'], elem1['type'], '   ',goods_token_set_ratio, type_token_set_ratio,' (token set ratio: ', index_token_set_ratio,')', sep='')
+                        _in  += 1
+                        _all += 1
+                
+                index = ''.join(choices(ascii_uppercase + ascii_lowercase + digits, k=12)) # получаем случайный индекс
+
+                sku_discount_desc   = sorted(product, key=by_discount, reverse=True) # макс скидка
+                sku_price_asc       = sorted(product, key=by_price)                  # мин цена
+                sku_price_desc      = sorted(product, key=by_price, reverse=True)    # макс цена
+
+                sku_html_1 = get_html_product(product, index, by_discount, True)
+                sku_html_2 = get_html_product(product, index, by_price, False)
+                sku_html_3 = get_html_product(product, index, by_price, True)
+
+                sku = Sku(id=index,
+                          sku_category=category_number,
+                          sku_name=elem1['name'], # ??
+                          sku_lowercase=elem1['name'].lower(), # по нему будет происходить поиск
+                          sku_price_asc=sku_price_asc[0]['new_price'],
+                          sku_price_desc=sku_price_desc[0]['new_price'],
+                          sku_discount_desc=sku_discount_desc[0]['discount'],
+                          sku_html_1=sku_html_1,
+                          sku_html_2=sku_html_2,
+                          sku_html_3=sku_html_3,
+                          sku_type=elem1['type'],
+                          sku_twin=True if len(product)>1 else False)
+
+                db.session.add(sku)
+                db.session.commit()
+
+        test_base[category] = category_base # для проверки данных (пока не удалять) # !!! delete        
+        category_number += 1
+        
+        # f = dt.now()
+        # print('-----------------------------------------------------')
+        # print('Общее время выполнения 1 алгоритма: '+str(f-s)+' сек.')
+        # print('-----------------------------------------------------')
+        
+        
+        # s = dt.now()
+        # k   = 0
+        # _in = 0
+        # arrays = [lenta, perekrestok, pka]
+        # for arr1 in arrays:
+        #     k += 1
+        #     for arr2 in arrays[k:len(arrays)]:
+        #         for elem1 in arr1:
+        #             index_token_set_ratio = 0
+        #             for elem2 in arr2:
+        #                 # сравнение элементов на схожесть
+        #                 if elem1['weight'] != elem2['weight']:
+        #                     continue
+        #                 token_set_ratio = fuzz.token_set_ratio(elem1['name'], elem2['name'])
+        #                 if token_set_ratio > index_token_set_ratio:
+        #                     index_token_set_ratio = token_set_ratio
+        #                     goods_token_set_ratio = elem2['name']
+        #                     type_token_set_ratio  = elem2['type']
+        #                     if token_set_ratio == 100:
+        #                         break
+        #             if index_token_set_ratio == 100:   # фильтр на попадание в массив похожих товаров
+        #                 print('<<<<<', elem1['name'], elem1['type'], '   ',goods_token_set_ratio, type_token_set_ratio,' (token set ratio: ', index_token_set_ratio,')', sep='')
+        #                 _in  += 1
+        #                 _all += 1
+        #             elif index_token_set_ratio == 0:
+        #                 pass
+        #                 # print(elem1['name'], elem1['type'], index_token_set_ratio)
+        #             else:
+        #                 pass
+        #                 # print(elem1['name'], elem1['type'], goods_token_set_ratio+' '+type_token_set_ratio+' (token set ratio: '+str(index_token_set_ratio)+')')
+        # f = dt.now()
+        # print('-----------------------------------------------------')
+        # print('Общее время выполнения 2 алгоритма: '+str(f-s)+' сек.')
+        # print('-----------------------------------------------------')
+        finish = dt.now()
+        print('')
+        print('----Время анализа кат. '+category+' составило: '+ str(finish-start)+' сек.----')
+        print('----Внесено: '+str(_in)+'----')
+        print('')
+    end = dt.now()
+    print('Общее время выполнения: '+str(end-beg)+' сек.')
+    print('Всего внесено: '+str(_all))
+    print('Общее количество товара: '+str(_total))
+    
+    # for category_num in ['1', '2', '3', '4', '5', '6', '7', '8']:
+    #     Thread(target=comparison, args=(category_num, pka_category_skus, lenta_category_skus)).start()    

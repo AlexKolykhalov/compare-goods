@@ -1,0 +1,147 @@
+{% extends 'bootstrap/base.html' %}
+
+
+{% block title %}
+    Search best prices
+{% endblock %}
+
+{% block styles %}
+    {{ super() }}    
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <link href="{{ url_for('static', filename='css/site_style.css') }}" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block navbar %}   
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">            
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-main">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="{{ url_for('main.index') }}">Сравни</a>
+            </div>            
+            <div class="collapse navbar-collapse" id="navbar-main">
+                <form class="navbar-form navbar-right">
+                    <button id="search_button" type="button" class="btn btn-default"><i class="fa fa-search" aria-hidden="true"></i> Поиск</button>
+                    <button id="categories_button" type="button" class="btn btn-default" style="display: none;"><i class="fa fa-list" aria-hidden="true"></i> Категории</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+{% endblock %}
+
+{% block content %}    
+    <div class="container-fluid">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info" role="alert">{{ message }}</div>
+                {% endfor %}        
+            {% endif %}
+        {% endwith %}
+
+        <!-- Modal -->
+        <div id="search_modal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Поиск товаров</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">                            
+                            <input class="form-control" id="inputdefault" type="text">                            
+                        </div>                        
+                        <div id="spinner" style="text-align: center;" hidden>
+                            <i class="fa fa-spinner fa-pulse fa-3x fa-fw" aria-hidden="true"></i>                            
+                        </div>                        
+                        <span id="search_result">
+                            <span id="html_button"></span>                            
+                        </span>                        
+                    </div>                    
+                </div>
+            </div>
+        </div>
+
+        <div id="categories_modal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Категории товаров</h4>
+                    </div>
+                    <div class="modal-body">
+                        <span id="catalog_tree_modal"></span>
+                    </div>                    
+                </div>
+            </div>
+        </div>
+
+        {% block app_content %}
+        {% endblock %}        
+    </div>    
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}    
+    <script>
+        // функция, осущ. задержку времени при изменении размера окна (для)
+        var waitForFinalEvent = (function() {
+            var timers = {};
+            return function (callback, ms, uniqueId) {
+                if (!uniqueId) {
+                    uniqueId = "Don't call this twice without a uniqueId";
+                }
+                if (timers[uniqueId]) {
+                    clearTimeout (timers[uniqueId]);
+                }
+                timers[uniqueId] = setTimeout(callback, ms);
+            };
+        })();
+        
+        $(document).on('click', function(e) {
+            if ($(e.target).hasClass('fa fa-heart-o') || $(e.target).hasClass('fa fa-heart')) {
+                $(e.target).toggleClass("fa-heart fa-heart-o");
+            }
+        });
+
+        // открытие модального окна Поиск
+        $('#search_button').click(function() {
+            $('#search_modal').modal('show');
+            $('#inputdefault').val('');
+            $('#search_result').html('Ничего не найдено');
+        });
+
+        // открытие модального окна Категории
+        $('#categories_button').click(function() {
+            $('#categories_modal').modal('show');
+        });
+
+        $('#inputdefault').on('input', function() {
+            var
+                _spinner = $('#spinner'),
+                _search_result = $('#search_result');
+            
+            _spinner.show();
+            _search_result.hide();
+            if ($(this).val().length > 2) {                
+                $.get("{{url_for('main.products_search')}}", {search_text: $('#inputdefault').val()})
+                    .done(function(response){                        
+                        _spinner.hide();
+                        _search_result.show();
+                        _search_result.html(response);                    
+                    });
+            } else {                
+                _spinner.hide();
+                _search_result.show();
+                _search_result.html('Ничего не найдено');
+            }
+        })
+    </script>
+    {% block app_scripts %}
+    {% endblock %}
+{% endblock %}

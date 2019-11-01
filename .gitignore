@@ -1,0 +1,14 @@
+# my ignore list
+__pycache__
+.venv
+.vscode
+migrations
+launch.json
+settings.json
+.env
+db_products.db
+
+
+Pipfile
+Pipfile.lock
+python_Levenshtein-0.12.0-cp37-cp37m-win32.whl
