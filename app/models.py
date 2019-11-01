@@ -18,4 +18,4 @@ class Sku(db.Model):
 class News(db.Model):
     id                = db.Column(db.Integer, primary_key=True)
     html_news         = db.Column(db.String)
-    date_news         = db.Column(db.DateTime())
+    date_news         = db.Column(db.DateTime()) 
