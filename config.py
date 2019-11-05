@@ -4,11 +4,11 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config(object):  
     # db SQLLite
-    SQLALCHEMY_DATABASE_URI        = os.environ.get('DATABASE_URL') or 'sqlite:///' + os.path.join(basedir, 'db_products.db')
+    SQLALCHEMY_DATABASE_URI        = os.environ.get('DATABASE_URL') or 'postgresql:///db_products'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # redis ???   
-    REDIS_URL = os.environ['REDIS_URL']
+    REDIS_URL = os.environ.get('REDIS_URL') or 'redis://localhost:6379/1'
 
     # mail
     MAIL_SERVER   = 'smtp.rambler.ru'   

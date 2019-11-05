@@ -8,7 +8,7 @@ from bs4        import BeautifulSoup
 from string     import ascii_uppercase, ascii_lowercase, digits
 from random     import choices
 from sqlalchemy import desc
-from difflib    import Differ # ?????
+
 
 import requests, json
 
