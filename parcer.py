@@ -82,8 +82,8 @@ def PEREKRESTOK():
     #     return perekrestok_category_skus
     
     perekrestok = db.session.query(Perekrestok).get(1)
-    # if perekrestok and perekrestok.date_perekrestok.day == dt.now().day:
-    #     return json.loads(perekrestok.html_perekrestok)
+    if perekrestok and perekrestok.date_perekrestok.day == dt.now().day:
+        return json.loads(perekrestok.html_perekrestok)
         
     # ПЕРЕКРЁСТОК
     session = requests.Session()
@@ -186,9 +186,9 @@ def PKA(): # если разбить категории на подкатего�
     #     pka_category_skus = json.loads(redis_store.get('PKA'))
     #     return pka_category_skus
     
-    # pka = db.session.query(Pka).get(1)
-    # if pka and pka.date_pka.day == dt.now().day:
-    #     return json.loads(pka.html_pka)
+    pka = db.session.query(Pka).get(1)
+    if pka and pka.date_pka.day == dt.now().day:
+        return json.loads(pka.html_pka)
 
     # ПЯТЁРОЧКА
     session = requests.Session()
@@ -273,8 +273,8 @@ def LENTA():
     #     return lenta_category_skus
     
     lenta = db.session.query(Lenta).get(1)
-    # if lenta and lenta.date_lenta.day == dt.now().day:
-    #     return json.loads(lenta.html_lenta)
+    if lenta and lenta.date_lenta.day == dt.now().day:
+        return json.loads(lenta.html_lenta)
 
     # ЛЕНТА
     session = requests.Session()
@@ -756,10 +756,6 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
     return {'carousel_indicators': html_text_carousel_indicators, 'carousel_inner': html_text_carousel_inner, 'html_text': html_text, 'show_load_button': show_load_button}
 
 def main_search():
-    
-    # perekrestok = db.session.query(Sku).get(1)
-    # if perekrestok and perekrestok.date_perekrestok.day == dt.now().day:
-    #     return json.loads(perekrestok.html_perekrestok)
 
     lenta_category_skus       = LENTA()
     perekrestok_category_skus = PEREKRESTOK()
