@@ -1,5 +1,5 @@
 from app import redis_store, db
-from app.models import Sku, News
+from app.models import Sku, News, Lenta, Perekrestok, Pka
 
 from fuzzywuzzy import fuzz
 from threading  import Thread
@@ -77,9 +77,14 @@ def get_data_slider(markets): # нужно ли?(слайдеры на перв�
 
 
 def PEREKRESTOK():
-    if redis_store.get('PEREKRESTOK'):
-        perekrestok_category_skus = json.loads(redis_store.get('PEREKRESTOK'))
-        return perekrestok_category_skus
+    # if redis_store.get('PEREKRESTOK'):
+    #     perekrestok_category_skus = json.loads(redis_store.get('PEREKRESTOK'))
+    #     return perekrestok_category_skus
+    
+    perekrestok = db.session.query(Perekrestok).get(1)
+    # if perekrestok and perekrestok.date_perekrestok.day == dt.now().day:
+    #     return json.loads(perekrestok.html_perekrestok)
+        
     # ПЕРЕКРЁСТОК
     session = requests.Session()
     num_page = 1
@@ -107,16 +112,15 @@ def PEREKRESTOK():
             #         product_brand = row.find('td', {'class': 'xf-product-table__col'}).text.strip()
             #         print(product_brand)
             #         break
-
             try:
-                new_price = "{:.2f}".format(float(product.find('div', {'class': 'xf-price xf-product-cost__current js-product__cost _highlight'})['data-cost']))
-                old_price = "{:.2f}".format(float(product.find('div', {'class': 'xf-price xf-product-cost__prev'})['data-cost']))
+                new_price = round(float(product.find('div', {'class': 'xf-price xf-product-cost__current js-product__cost _highlight'})['data-cost']), 2)
+                old_price = round(float(product.find('div', {'class': 'xf-price xf-product-cost__prev js-product__old-cost'})['data-cost']), 2)
                 discount_text = product.find('div', {'class': 'xf-product-cost__old-price'}).find('p').text
                 discount = int(discount_text[1:len(discount_text)-1])
             except TypeError:
                 # записываем новую цену равной старой, т.к. скидки не оказалось 
-                new_price = "{:.2f}".format(float(product.find('div', {'class': 'xf-price xf-product-cost__current js-product__cost'})['data-cost']))
-                old_price = "{:.2f}".format(float(product.find('div', {'class': 'xf-price xf-product-cost__current js-product__cost'})['data-cost']))
+                new_price = round(float(product.find('div', {'class': 'xf-price xf-product-cost__current js-product__cost'})['data-cost']), 2)
+                old_price = new_price
                 discount = 0
             product_img = product.find('img', {'class': 'js-lazy swiper-lazy xf-product-picture__img'})['data-src']
             product_href = product.find('a', {'class': 'xf-product-title__link js-product__title'})['href']
@@ -139,7 +143,14 @@ def PEREKRESTOK():
             _in += 1
         num_page += 1
     print('Всего товаров в ПЕРЕКРЁСТОК:', _all, 'Внесено:', _in)
-    redis_store.set('PEREKRESTOK', json.dumps(perekrestok_category_skus))
+    # redis_store.set('PEREKRESTOK', json.dumps(perekrestok_category_skus))
+    if perekrestok:
+        perekrestok.html_perekrestok = json.dumps(perekrestok_category_skus)
+        perekrestok.date_perekrestok = dt.now()
+    else:
+        perekrestok = Perekrestok(html_perekrestok=json.dumps(perekrestok_category_skus), date_perekrestok=dt.now())    
+        db.session.add(perekrestok)
+    db.session.commit()
     return perekrestok_category_skus
     
 
@@ -171,9 +182,14 @@ def PEREKRESTOK():
     # METRO
 
 def PKA(): # если разбить категории на подкатегории, то можно будет избавиться от двойного кода
-    if redis_store.get('PKA'):
-        pka_category_skus = json.loads(redis_store.get('PKA'))
-        return pka_category_skus
+    # if redis_store.get('PKA'):
+    #     pka_category_skus = json.loads(redis_store.get('PKA'))
+    #     return pka_category_skus
+    
+    # pka = db.session.query(Pka).get(1)
+    # if pka and pka.date_pka.day == dt.now().day:
+    #     return json.loads(pka.html_pka)
+
     # ПЯТЁРОЧКА
     session = requests.Session()
     session.get('https://5ka.ru')
@@ -202,8 +218,8 @@ def PKA(): # если разбить категории на подкатего�
                         pka_skus = {'name': name,
                                     'img': skus['img_link'],
                                     'href': 'https://5ka.ru/special_offers/'+str(skus['id']),
-                                    'new_price': "{:.2f}".format(float(skus['current_prices']['price_promo__min'])),
-                                    'old_price': "{:.2f}".format(float(skus['current_prices']['price_reg__min'])),
+                                    'new_price': format(float(skus['current_prices']['price_promo__min']), '.2f'),
+                                    'old_price': format(float(skus['current_prices']['price_reg__min']), '.2f'),
                                     'discount': round((skus['current_prices']['price_reg__min']-skus['current_prices']['price_promo__min'])/skus['current_prices']['price_reg__min']*100),
                                     'weight': weight,
                                     'type': '(5KA)',
@@ -220,19 +236,16 @@ def PKA(): # если разбить категории на подкатего�
                 pka_category_skus[category] = []
             url = 'https://5ka.ru/api/v2/special_offers/?categories='+group['parent_group_code']+'&ordering=&page=1&price_promo__gte=&price_promo__lte=&records_per_page=12&search=&store='
             k = 0
-            while True:
-                try:
-                    get = session.get(url).json()
-                except:
-                    s = 0
-                for skus in get['results']:                
+            while True:                
+                get = session.get(url).json()
+                for skus in get['results']:
                     name = costruct_name(skus['name'])
                     weight = name.split(' ')[len(name.split(' '))-1]
                     pka_skus = {'name': name, 
                                 'img': skus['img_link'],                                
                                 'href': 'https://5ka.ru/special_offers/'+str(skus['id']),
-                                'new_price': "{:.2f}".format(float(skus['current_prices']['price_promo__min'])),
-                                'old_price': "{:.2f}".format(float(skus['current_prices']['price_reg__min'])),
+                                'new_price': format(float(skus['current_prices']['price_promo__min']), '.2f'),
+                                'old_price': format(float(skus['current_prices']['price_reg__min']), '.2f'),
                                 'discount': round((skus['current_prices']['price_reg__min']-skus['current_prices']['price_promo__min'])/skus['current_prices']['price_reg__min']*100),
                                 'weight': weight, 
                                 'type': '(5KA)',
@@ -244,13 +257,25 @@ def PKA(): # если разбить категории на подкатего�
                 if url == None:
                     break            
             print('ПЯТЁРОЧКА кат. '+category+' ('+group['parent_group_name']+') внесено:', k)
-    redis_store.set('PKA', json.dumps(pka_category_skus))
+    # redis_store.set('PKA', json.dumps(pka_category_skus))
+    if pka:
+        pka.html_pka = json.dumps(pka_category_skus)
+        pka.date_pka = dt.now()
+    else:
+        pka = Pka(html_pka=json.dumps(pka_category_skus), date_pka=dt.now())    
+        db.session.add(pka)
+    db.session.commit()
     return pka_category_skus
 
 def LENTA():
-    if redis_store.get('LENTA'):
-        lenta_category_skus = json.loads(redis_store.get('LENTA'))
-        return lenta_category_skus    
+    # if redis_store.get('LENTA'):
+    #     lenta_category_skus = json.loads(redis_store.get('LENTA'))
+    #     return lenta_category_skus
+    
+    lenta = db.session.query(Lenta).get(1)
+    # if lenta and lenta.date_lenta.day == dt.now().day:
+    #     return json.loads(lenta.html_lenta)
+
     # ЛЕНТА
     session = requests.Session()
     session.headers = {'Accept': 'application/json',                
@@ -296,16 +321,16 @@ def LENTA():
                         break    
                     for skus in post['skus']:
                         title    = skus['title'].replace('ё', 'е').replace("'", '').replace('.', '')
-                        subtitle = skus['subTitle'].strip().replace(' г', 'г').replace(' кг', 'кг').replace(' шт', 'шт').replace(' уп', 'уп')                        
+                        subtitle = skus['subTitle'].strip().replace(' г', 'г').replace(' кг', 'кг').replace(' шт', 'шт').replace(' уп', 'уп')
                         weight  = subtitle.split(', ')[len(subtitle.split(', '))-1]
-                        weight = '' if weight == '' or weight[0] not in list(digits) else weight                        
+                        weight = '' if weight == '' or weight[0] not in list(digits) else weight
                         origin_name = title+' '+weight
                         name = ' '.join(origin_name.split())                        
                         lenta_skus = {'name': name,
                                       'img': skus['imageUrl'] if skus['imageUrl'] else 'https://lenta.gcdn.co/static/pics/image-default--thumb.305ca150c22262acb4c40de317e93d1a.png',
                                       'href': 'https://lenta.com'+skus['skuUrl'],
-                                      'new_price': "{:.2f}".format(float(skus['cardPrice']['value'])),
-                                      'old_price': "{:.2f}".format(float(skus['regularPrice']['value'])),
+                                      'new_price': skus['cardPrice']['value'],    # "{:.2f}".format(float(skus['cardPrice']['value'])),
+                                      'old_price': skus['regularPrice']['value'], # "{:.2f}".format(float(skus['regularPrice']['value'])),
                                       'discount': skus['promoPercent'],
                                       'weight': weight,
                                       'type': '(LENTA)',
@@ -317,7 +342,15 @@ def LENTA():
                 print('ЛЕНТА кат. '+category+' ('+group_category['name']+') внесено:', k)
     else:
         print('LENTA', page.status_code, page.reason)
-    redis_store.set('LENTA', json.dumps(lenta_category_skus))
+    # redis_store.set('LENTA', json.dumps(lenta_category_skus))
+    if lenta:
+        lenta.html_lenta = json.dumps(lenta_category_skus)
+        lenta.date_lenta = dt.now()
+    else:
+        lenta = Lenta(html_lenta=json.dumps(lenta_category_skus), date_lenta=dt.now())    
+        db.session.add(lenta)
+    db.session.commit()
+
     return lenta_category_skus
 
 
@@ -564,21 +597,23 @@ def costruct_name(name):
 
 # варианты сортировок
 def by_discount(elem):
-    if 'prod' in elem.keys():
-        max_discount = 0
-        for prod in elem['prod']:
-            if prod['discount']>max_discount:
-                max_discount = prod['discount']
-        return max_discount
+    # if 'prod' in elem.keys():
+    #     max_discount = 0
+    #     for prod in elem['prod']:
+    #         if prod['discount']>max_discount:
+    #             max_discount = prod['discount']
+    #     return max_discount
     
     return elem['discount']
 
 def by_price(elem):
-    max_price = 0    
-    price = elem['old_price'] if elem['new_price'] == '0.00' else elem['new_price']
-    if float(price)>max_price:
-        max_price = float(price)
-    return max_price
+    # max_price = 0    
+    # price = elem['old_price'] if elem['new_price'] == '0.00' else elem['new_price']
+    # if float(price)>max_price:
+    #     max_price = float(price)
+    # return max_price
+
+    return elem['new_price'] 
 
 
 
@@ -617,9 +652,9 @@ def get_html_product(product_array, index, key, reverse):
                                          tab_href=tab_href,
                                          img=row['img'],
                                          href=row['href'],
-                                         name=row['name'], 
-                                         new_price=row['new_price'],
-                                         old_price=row['old_price'],
+                                         name=row['name'],
+                                         new_price="{:.2f}".format(row['new_price']),
+                                         old_price="{:.2f}".format(row['old_price']),
                                          discount=row['discount'])
         ul = ul + li
         div = div + tab_content
@@ -645,9 +680,9 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
             else:
                 if checked:
                     if search_text:
-                        sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_twin==1, Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_twin==True, Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
                     else:                        
-                        sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_twin==1).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_twin==True).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
                 else:
                     if search_text:
                         sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
@@ -662,9 +697,9 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
             else:
                 if checked:
                     if search_text:
-                        sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_twin==1, Sku.sku_lowercase.like(search_text)).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_twin==True, Sku.sku_lowercase.like(search_text)).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
                     else:
-                        sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_twin==1).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_twin==True).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
                 else:
                     if search_text:
                         sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_lowercase.like(search_text)).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
@@ -679,9 +714,9 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
             else:
                 if checked:
                     if search_text:
-                        sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_twin==1, Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_twin==True, Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
                     else:
-                        sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_twin==1).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_twin==True).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
                 else:
                     if search_text:
                         sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
@@ -722,36 +757,24 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
 
 def main_search():
     
-    s = 'Напиток сывороточный NEO МАЖИТЭЛЬ с соком Мажитэль J7 арбуз-дыня ПЭТ 950г'
-    s1 = 'Напиток молочно-соковый Мажитэль Арбуз и Дыня 950г'
-    token_set_ratio1 = fuzz.token_set_ratio(s, s1)
-    token_set_ratio2 = fuzz.token_sort_ratio(s, s1)
-    seqMatch1 = fuzz.SequenceMatcher(lambda x: x == " ", s, s1).ratio() #
-    seqMatch2 = fuzz.SequenceMatcher(lambda x: x == " ", s, s1).quick_ratio() #
-    seqMatch3 = fuzz.SequenceMatcher(None, s, s1).real_quick_ratio() #
+    # perekrestok = db.session.query(Sku).get(1)
+    # if perekrestok and perekrestok.date_perekrestok.day == dt.now().day:
+    #     return json.loads(perekrestok.html_perekrestok)
 
-    # s = SequenceMatcher(lambda x: x == " ", "private Thread currentThread;", "private volatile Thread currentThread;")
-    # x in ['с', 'из печи', 'со вкусом', ' ']
-    # seqMatch = fuzz.SequenceMatcher(lambda x: x in ['со', 'вкусом', 'из', 'печи'], s, s1)
-    # rqr = seqMatch(None, s, s1).real_quick_ratio()
-    # differ = Differ()
-    # d = list(differ.compare(s, s1))
-    
     lenta_category_skus       = LENTA()
     perekrestok_category_skus = PEREKRESTOK()
-    pka_category_skus         = PKA()
+    pka_category_skus         = {} #PKA()
 
     # удаляем все записи в таблице Sku
     db.session.query(Sku).delete()
     db.session.commit()
 
     # # async
-    beg             = dt.now()    
+    beg             = dt.now()
     _all            = 0 # общее число внесенных товаров
     _total          = 0 # общее число товаров
     category_number = 0 # счетчик для нумерования категорий товара
-    common_base     = []    
-    test_base       = {} # !!! delete
+    common_base     = []
     
     for category in get_catalog().keys():
         lenta       = []
@@ -804,9 +827,9 @@ def main_search():
                 
                 index = ''.join(choices(ascii_uppercase + ascii_lowercase + digits, k=12)) # получаем случайный индекс
 
-                sku_discount_desc   = sorted(product, key=by_discount, reverse=True) # макс скидка
-                sku_price_asc       = sorted(product, key=by_price)                  # мин цена
-                sku_price_desc      = sorted(product, key=by_price, reverse=True)    # макс цена
+                sku_discount_desc = sorted(product, key=by_discount, reverse=True) # макс скидка
+                sku_price_asc     = sorted(product, key=by_price)                  # мин цена
+                sku_price_desc    = sorted(product, key=by_price, reverse=True)    # макс цена
 
                 sku_html_1 = get_html_product(product, index, by_discount, True)
                 sku_html_2 = get_html_product(product, index, by_price, False)
@@ -814,7 +837,7 @@ def main_search():
 
                 sku = Sku(id=index,
                           sku_category=category_number,
-                          sku_name=elem1['name'], # ??
+                          sku_name=elem1['name'],
                           sku_lowercase=elem1['name'].lower(), # по нему будет происходить поиск
                           sku_price_asc=sku_price_asc[0]['new_price'],
                           sku_price_desc=sku_price_desc[0]['new_price'],
@@ -822,13 +845,12 @@ def main_search():
                           sku_html_1=sku_html_1,
                           sku_html_2=sku_html_2,
                           sku_html_3=sku_html_3,
-                          sku_type=elem1['type'],
+                        #   sku_type=elem1['type'], # ??? тип не нужен, см. массив product
                           sku_twin=True if len(product)>1 else False)
 
                 db.session.add(sku)
                 db.session.commit()
-
-        test_base[category] = category_base # для проверки данных (пока не удалять) # !!! delete        
+        
         category_number += 1
         
         # f = dt.now()
