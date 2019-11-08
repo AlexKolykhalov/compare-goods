@@ -347,7 +347,7 @@ def get_news():
     # news = db.session.query(News).get(1)
     # if news and news.date_news.day == dt.now().day:
     #     return news.html_news
-    
+    print('News')
     news_lenta       = ''
     news_perekrestok = ''
     news_pka         = ''
@@ -374,6 +374,7 @@ def get_news():
             news_href        = news_content.find('div', {'class': 'news-item__more'}).find('a', {'class': 'link'})['href']
             news_html        = '<hr><b>'+news_title+'</b><br>'+news_description+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
             news_lenta       = news_lenta + news_html
+    print(news_lenta)
     #perekrestok    
     session = requests.Session()
     page = session.get('https://www.perekrestok.ru/promos')
@@ -381,8 +382,10 @@ def get_news():
     for news_content in perekrestok_news_content:
         news_href              = news_content.find('a')['href']
         page_news              = session.get(news_href)
+        print(BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'}))
         page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
         news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
+    print(news_perekrestok)
     #pka
     session = requests.Session()
     session.get('https://5ka.ru')
@@ -393,7 +396,7 @@ def get_news():
     pka_news_array   = pka_news_content['results'][:4]
     for news_content in pka_news_array:
         news_pka = news_pka+'<hr>'+news_content['preview_text']+'<br><a href="https://5ka.ru/news/'+str(news_content['id'])+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
-    
+    print(news_pka)
     
     news_array = '''<ul class="nav nav-tabs">
                         <li class="active"><a data-toggle="tab" href="#news_lenta"><img src="https://lenta.gcdn.co/static/pics/shortcuts/favicon-32x32.fb90679fd6d6da31ec7059b1cd4985e1.png"></a></li>
