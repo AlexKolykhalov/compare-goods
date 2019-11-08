@@ -7,7 +7,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 
 sched = BlockingScheduler()
 
-@sched.scheduled_job('interval', minutes=120)
+@sched.scheduled_job('interval', minutes=30)
 def timed_job():
     start = dt.now()
     app = create_app()
