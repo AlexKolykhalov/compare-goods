@@ -770,7 +770,6 @@ def main_search():
     _all            = 0 # общее число внесенных товаров
     _total          = 0 # общее число товаров
     category_number = 0 # счетчик для нумерования категорий товара
-    common_base     = []
     
     for category in get_catalog().keys():
         lenta       = []
@@ -790,7 +789,6 @@ def main_search():
         # s = dt.now()
         k   = 0
         _in = 0
-        category_base = []        
         arrays = [lenta, perekrestok, pka]
         for arr1 in arrays:
             k += 1

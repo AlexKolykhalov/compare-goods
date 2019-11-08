@@ -11,8 +11,7 @@ class Sku(db.Model):
     sku_discount_desc = db.Column(db.Integer)
     sku_html_1        = db.Column(db.String)
     sku_html_2        = db.Column(db.String)
-    sku_html_3        = db.Column(db.String)
-    # sku_type          = db.Column(db.String(13))
+    sku_html_3        = db.Column(db.String)    
     sku_twin          = db.Column(db.Boolean, default=False)
 
 class News(db.Model):
