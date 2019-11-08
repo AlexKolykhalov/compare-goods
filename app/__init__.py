@@ -37,9 +37,8 @@ def create_app(config_class=Config):
     bootstrap.init_app(app)
     mail.init_app(app)
     redis_store.init_app(app, decode_responses=True)
-    with app.app_context():
-        db.init_app(app)
-        migrate.init_app(app, db)
+    db.init_app(app)
+    migrate.init_app(app, db)
 
     # login_manager.init_app(app)
         
