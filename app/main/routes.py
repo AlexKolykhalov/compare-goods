@@ -1,16 +1,14 @@
 from app        import db
 from app.main   import bp
-from app.parcer import get_data_slider, main_search, get_catalog, html_creator, get_news, Sku
+from app.models import Sku
+from app.parcer import main_search, get_catalog, html_creator, get_news
 
 from flask      import render_template, request, make_response, url_for
 
 
 
 @bp.route('/')
-def index():
-    # get data for our slider
-    # data_slider = redis_store.get('data_slider')
-    # data_slider = get_data_slider(['lenta', '5ka']) # нужно ли (слайдеры на первых страницах)
+def index():    
     news = get_news()
     return render_template('index.html', news=news)
         
