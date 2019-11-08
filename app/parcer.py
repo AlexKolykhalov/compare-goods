@@ -77,13 +77,9 @@ def get_data_slider(markets): # нужно ли?(слайдеры на перв�
 
 
 def PEREKRESTOK():
-    # if redis_store.get('PEREKRESTOK'):
-    #     perekrestok_category_skus = json.loads(redis_store.get('PEREKRESTOK'))
-    #     return perekrestok_category_skus
-    
-    perekrestok = db.session.query(Perekrestok).get(1)
-    if perekrestok and perekrestok.date_perekrestok.day == dt.now().day:
-        return json.loads(perekrestok.html_perekrestok)
+    # perekrestok = db.session.query(Perekrestok).get(1)
+    # if perekrestok and perekrestok.date_perekrestok.day == dt.now().day:
+    #     return json.loads(perekrestok.html_perekrestok)
         
     # ПЕРЕКРЁСТОК
     session = requests.Session()
@@ -143,14 +139,14 @@ def PEREKRESTOK():
             _in += 1
         num_page += 1
     print('Всего товаров в ПЕРЕКРЁСТОК:', _all, 'Внесено:', _in)
-    # redis_store.set('PEREKRESTOK', json.dumps(perekrestok_category_skus))
-    if perekrestok:
-        perekrestok.html_perekrestok = json.dumps(perekrestok_category_skus)
-        perekrestok.date_perekrestok = dt.now()
-    else:
-        perekrestok = Perekrestok(html_perekrestok=json.dumps(perekrestok_category_skus), date_perekrestok=dt.now())    
-        db.session.add(perekrestok)
-    db.session.commit()
+    # perekrestok = db.session.query(Perekrestok).get(1)
+    # if perekrestok:
+    #     perekrestok.html_perekrestok = json.dumps(perekrestok_category_skus)
+    #     perekrestok.date_perekrestok = dt.now()
+    # else:
+    #     perekrestok = Perekrestok(html_perekrestok=json.dumps(perekrestok_category_skus), date_perekrestok=dt.now())
+    #     db.session.add(perekrestok)
+    # db.session.commit()
     return perekrestok_category_skus
     
 
@@ -182,22 +178,17 @@ def PEREKRESTOK():
     # METRO
 
 def PKA(): # если разбить категории на подкатегории, то можно будет избавиться от двойного кода
-    # if redis_store.get('PKA'):
-    #     pka_category_skus = json.loads(redis_store.get('PKA'))
-    #     return pka_category_skus
-    
-    pka = db.session.query(Pka).get(1)
-    if pka and pka.date_pka.day == dt.now().day:
-        return json.loads(pka.html_pka)
-
     # ПЯТЁРОЧКА
     session = requests.Session()
     session.get('https://5ka.ru')
     kwargs = {'domain': '5ka.ru'}
     cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
     session.cookies.set_cookie(cookie)
-    groups = session.get('https://5ka.ru/api/v2/categories/').json()
     pka_category_skus = {}
+    special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=').json()
+    if len(special_offers['results']) == 0:
+        return pka_category_skus
+    groups = session.get('https://5ka.ru/api/v2/categories/').json()    
     for group in groups:    
         category = get_category(group['parent_group_name'])
         if category == '':
@@ -256,25 +247,21 @@ def PKA(): # если разбить категории на подкатего�
                 url = get['next']
                 if url == None:
                     break            
-            print('ПЯТЁРОЧКА кат. '+category+' ('+group['parent_group_name']+') внесено:', k)
-    # redis_store.set('PKA', json.dumps(pka_category_skus))
-    if pka:
-        pka.html_pka = json.dumps(pka_category_skus)
-        pka.date_pka = dt.now()
-    else:
-        pka = Pka(html_pka=json.dumps(pka_category_skus), date_pka=dt.now())    
-        db.session.add(pka)
-    db.session.commit()
+            print('ПЯТЁРОЧКА кат. '+category+' ('+group['parent_group_name']+') внесено:', k)    
+    # pka = db.session.query(Pka).get(1)
+    # if pka:
+    #     pka.html_pka = json.dumps(pka_category_skus)
+    #     pka.date_pka = dt.now()
+    # else:
+    #     pka = Pka(html_pka=json.dumps(pka_category_skus), date_pka=dt.now())    
+    #     db.session.add(pka)
+    # db.session.commit()
     return pka_category_skus
 
 def LENTA():
-    # if redis_store.get('LENTA'):
-    #     lenta_category_skus = json.loads(redis_store.get('LENTA'))
-    #     return lenta_category_skus
-    
-    lenta = db.session.query(Lenta).get(1)
-    if lenta and lenta.date_lenta.day == dt.now().day:
-        return json.loads(lenta.html_lenta)
+    # lenta = db.session.query(Lenta).get(1)
+    # if lenta and lenta.date_lenta.day == dt.now().day:
+    #     return json.loads(lenta.html_lenta)
 
     # ЛЕНТА
     session = requests.Session()
@@ -341,24 +328,25 @@ def LENTA():
                     offset = offset + limit
                 print('ЛЕНТА кат. '+category+' ('+group_category['name']+') внесено:', k)
     else:
-        print('LENTA', page.status_code, page.reason)
-    # redis_store.set('LENTA', json.dumps(lenta_category_skus))
-    if lenta:
-        lenta.html_lenta = json.dumps(lenta_category_skus)
-        lenta.date_lenta = dt.now()
-    else:
-        lenta = Lenta(html_lenta=json.dumps(lenta_category_skus), date_lenta=dt.now())    
-        db.session.add(lenta)
-    db.session.commit()
+        print('LENTA', page.status_code, page.reason)    
+    
+    # lenta = db.session.query(Lenta).get(1)
+    # if lenta:
+    #     lenta.html_lenta = json.dumps(lenta_category_skus)
+    #     lenta.date_lenta = dt.now()
+    # else:
+    #     lenta = Lenta(html_lenta=json.dumps(lenta_category_skus), date_lenta=dt.now())    
+    #     db.session.add(lenta)
+    # db.session.commit()
 
     return lenta_category_skus
 
 
 
 def get_news():
-    news = db.session.query(News).get(1)
-    if news and news.date_news.day == dt.now().day:
-        return news.html_news
+    # news = db.session.query(News).get(1)
+    # if news and news.date_news.day == dt.now().day:
+    #     return news.html_news
     
     news_lenta       = ''
     news_perekrestok = ''
@@ -424,6 +412,7 @@ def get_news():
                         </div>
                     </div>'''.format(news_lenta=news_lenta, news_perekrestok=news_perekrestok, news_pka=news_pka)    
     
+    news = db.session.query(News).get(1)
     if news:
         news.html_news = news_array
         news.date_news = dt.now()
@@ -433,7 +422,7 @@ def get_news():
         
     db.session.commit()
 
-    return news_array
+    # return news_array
 
 def get_catalog():
     goods = {
@@ -756,10 +745,12 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
     return {'carousel_indicators': html_text_carousel_indicators, 'carousel_inner': html_text_carousel_inner, 'html_text': html_text, 'show_load_button': show_load_button}
 
 def main_search():
-        
+
+    get_news()
+
     lenta_category_skus       = LENTA()
     perekrestok_category_skus = PEREKRESTOK()
-    pka_category_skus         = {} #PKA()
+    pka_category_skus         = PKA()
 
     # удаляем все записи в таблице Sku
     db.session.query(Sku).delete()

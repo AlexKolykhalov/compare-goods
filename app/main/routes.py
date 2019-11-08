@@ -1,7 +1,7 @@
 from app        import db
 from app.main   import bp
-from app.models import Sku
-from app.parcer import main_search, get_catalog, html_creator, get_news
+from app.models import Sku, News
+from app.parcer import main_search, get_catalog, html_creator, get_news #(delete main_search & get_news)
 
 from flask      import render_template, request, make_response, url_for
 
@@ -9,7 +9,8 @@ from flask      import render_template, request, make_response, url_for
 
 @bp.route('/')
 def index():    
-    news = get_news()
+    # news = get_news()    
+    news = db.session.query(News).get(1)
     return render_template('index.html', news=news)
         
 
