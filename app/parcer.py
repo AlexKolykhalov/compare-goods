@@ -347,7 +347,7 @@ def get_news():
     # news = db.session.query(News).get(1)
     # if news and news.date_news.day == dt.now().day:
     #     return news.html_news
-    print('News')
+    print('----News')
     news_lenta       = ''
     news_perekrestok = ''
     news_pka         = ''
