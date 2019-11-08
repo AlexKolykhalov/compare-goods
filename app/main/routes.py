@@ -1,7 +1,7 @@
 from app        import db
 from app.main   import bp
 from flask      import render_template, request, make_response, url_for
-from parcer     import get_data_slider, main_search, get_catalog, html_creator, get_news, Sku
+from app.parcer import get_data_slider, main_search, get_catalog, html_creator, get_news, Sku
 
 
 

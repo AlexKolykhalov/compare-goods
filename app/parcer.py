@@ -1,4 +1,4 @@
-from app import redis_store, db
+from app        import redis_store, db
 from app.models import Sku, News, Lenta, Perekrestok, Pka
 
 from fuzzywuzzy import fuzz
@@ -279,8 +279,8 @@ def LENTA():
     # ЛЕНТА
     session = requests.Session()
     session.headers = {'Accept': 'application/json',                
-                    'Content-Type': 'application/json',                
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0'}
+                       'Content-Type': 'application/json',                
+                       'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0'}
 
     for name, value in [('CityCookie', 'lpc'), ('lentaT2', 'lpc'), ('Store', '0148')]:    
         kwargs = {'domain': 'lenta.com'}
@@ -756,7 +756,7 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
     return {'carousel_indicators': html_text_carousel_indicators, 'carousel_inner': html_text_carousel_inner, 'html_text': html_text, 'show_load_button': show_load_button}
 
 def main_search():
-
+        
     lenta_category_skus       = LENTA()
     perekrestok_category_skus = PEREKRESTOK()
     pka_category_skus         = {} #PKA()
