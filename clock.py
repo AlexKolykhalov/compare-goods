@@ -4,7 +4,7 @@ from datetime import datetime as dt
 
 sched = BlockingScheduler()
 
-@sched.scheduled_job('interval', minutes=60)
+@sched.scheduled_job('interval', minutes=3)
 def timed_job():
     start = dt.now()
     main_search()
