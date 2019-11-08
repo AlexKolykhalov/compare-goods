@@ -1,13 +1,18 @@
+from app                             import create_app
+from app.parcer                      import main_search
+
+from flask                           import current_app
+from datetime                        import datetime as dt
 from apscheduler.schedulers.blocking import BlockingScheduler
-from parcer import main_search
-from datetime import datetime as dt
 
 sched = BlockingScheduler()
 
-@sched.scheduled_job('interval', minutes=60)
+@sched.scheduled_job('interval', minutes=1)
 def timed_job():
     start = dt.now()
-    main_search()
+    app = create_app()
+    with app.app_context():
+        main_search()
     end = dt.now()
     print('This job is done.', start,'---', end)
 
