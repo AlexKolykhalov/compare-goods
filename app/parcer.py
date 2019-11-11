@@ -83,6 +83,8 @@ def PEREKRESTOK():
         
     # ПЕРЕКРЁСТОК
     session = requests.Session()
+    cookie = requests.cookies.create_cookie('region', '16')
+    session.cookies.set_cookie(cookie)
     num_page = 1
     _all = 0
     _in  = 0
@@ -300,8 +302,7 @@ def LENTA():
                         "limit": limit
                     }
                     try:
-                        post = session.post('https://lenta.com/api/v1/skus/list', json=param).json()
-                        print(post.keys(), post.values())                    
+                        post = session.post('https://lenta.com/api/v1/skus/list', json=param).json()                        
                     except json.JSONDecodeError:
                         print('--->', group_category['name'], 'offset', offset, 'limit', limit)
                         continue
@@ -344,7 +345,7 @@ def LENTA():
 
 
 
-def get_news():    
+def get_news():
     news_lenta       = ''
     news_perekrestok = ''
     news_pka         = ''
