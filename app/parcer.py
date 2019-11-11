@@ -742,8 +742,8 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
 
 def main_search():
     # get_news()
-    lenta_category_skus       = LENTA()
-    perekrestok_category_skus = PEREKRESTOK()
+    # lenta_category_skus       = LENTA()
+    # perekrestok_category_skus = PEREKRESTOK()
     pka_category_skus         = PKA()
 
     # удаляем все записи в таблице Sku
