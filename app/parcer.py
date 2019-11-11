@@ -581,42 +581,38 @@ def costruct_name(name):
     return ' '.join(costruct_name.split())
 
 def connecton_check():
-    # Lenta
-    session = requests.Session()
-    session.headers = {'Accept': 'application/json',                
-                       'Content-Type': 'application/json',                
-                       'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0'}
+    # # Lenta
+    # session = requests.Session()
+    # session.headers = {'Accept': 'application/json',                
+    #                    'Content-Type': 'application/json',                
+    #                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0'}
 
-    for name, value in [('CityCookie', 'lpc'), ('lentaT2', 'lpc'), ('Store', '0148')]:    
-        kwargs = {'domain': 'lenta.com'}
-        cookie = requests.cookies.create_cookie(name, value, **kwargs)
-        session.cookies.set_cookie(cookie)
+    # for name, value in [('CityCookie', 'lpc'), ('lentaT2', 'lpc'), ('Store', '0148')]:    
+    #     kwargs = {'domain': 'lenta.com'}
+    #     cookie = requests.cookies.create_cookie(name, value, **kwargs)
+    #     session.cookies.set_cookie(cookie)
 
-    page = session.get('https://lenta.com/catalog/')
-    print('Lenta connection status:', page.status_code)
-    # Perekrestok
-    session = requests.Session()
-    cookie = requests.cookies.create_cookie('region', '16')
-    session.cookies.set_cookie(cookie)
-    url = 'https://www.perekrestok.ru/assortment?page=1&sort=rate_desc'
-    page = session.get(url)
-    print('Perekrestok connection status:', page.status_code)
+    # page = session.get('https://lenta.com/catalog/')
+    # print('Lenta connection status:', page.status_code)
+    # # Perekrestok
+    # session = requests.Session()
+    # cookie = requests.cookies.create_cookie('region', '16')
+    # session.cookies.set_cookie(cookie)
+    # url = 'https://www.perekrestok.ru/assortment?page=1&sort=rate_desc'
+    # page = session.get(url)
+    # print('Perekrestok connection status:', page.status_code)
     # 5ka    
     # header_name=X-Authorization; 
     # _gcl_au=1.1.609425895.1573474776; 
     # location_id=1814; 
     # token=Token69f1c9e674ca3e7c87faea771365e0dadf0499df    
     session = requests.Session()
-    for name, value in [('header_name', 'X-Authorization'), ('_gcl_au', '1.1.609425895.1573474776'), ('location_id', '1814'), ('token', 'Token69f1c9e674ca3e7c87faea771365e0dadf0499df')]:    
-        # kwargs = {'domain': 'lenta.com'}
-        cookie = requests.cookies.create_cookie(name, value)
-        session.cookies.set_cookie(cookie)    
-    try:
-        # special_offers = session.get('https://5ka.ru')
-        special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=')
-        print('5ka connection status:', special_offers.status_code)
-    except ConnectionError:
-        print('5ka connection status: failed')
+    # for name, value in [('header_name', 'X-Authorization'), ('_gcl_au', '1.1.609425895.1573474776'), ('location_id', '1814'), ('token', 'Token69f1c9e674ca3e7c87faea771365e0dadf0499df')]:
+    #     cookie = requests.cookies.create_cookie(name, value)
+    #     session.cookies.set_cookie(cookie)
+    special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=')
+    print('5ka connection status:', special_offers.status_code)
+    
 
 # варианты сортировок
 def by_discount(elem):
