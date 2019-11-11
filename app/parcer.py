@@ -301,6 +301,7 @@ def LENTA():
                     }
                     try:
                         post = session.post('https://lenta.com/api/v1/skus/list', json=param).json()
+                        print(post.keys(), post.values())                    
                     except json.JSONDecodeError:
                         print('--->', group_category['name'], 'offset', offset, 'limit', limit)
                         continue
@@ -378,8 +379,7 @@ def get_news():
     perekrestok_news_content = BeautifulSoup(page.content, 'html.parser').find_all('li', {'class': 'xf-promo__item'})
     for news_content in perekrestok_news_content:
         news_href              = news_content.find('a')['href']
-        page_news              = session.get(news_href)
-        print(BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'}))
+        page_news              = session.get(news_href)        
         page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
         news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'    
     #pka
@@ -740,7 +740,7 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
     return {'carousel_indicators': html_text_carousel_indicators, 'carousel_inner': html_text_carousel_inner, 'html_text': html_text, 'show_load_button': show_load_button}
 
 def main_search():
-    get_news()
+    # get_news()
     lenta_category_skus       = LENTA()
     perekrestok_category_skus = PEREKRESTOK()
     pka_category_skus         = PKA()
