@@ -606,9 +606,8 @@ def connecton_check():
     session.headers = {'Accept': 'application/json',                
                        'Content-Type': 'application/json',                
                        'Connection': 'keep-alive',
-                       'Keep-Alive': 'timeout=15'}
-    # session.get('https://5ka.ru')
-    kwargs = {'domain': '5ka.ru'}
+                       'Keep-Alive': 'timeout=15'}    
+    kwargs = {'path': '/','domain': '5ka.ru'}
     cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)    
     session.cookies.set_cookie(cookie)
     try:
