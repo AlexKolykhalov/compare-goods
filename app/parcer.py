@@ -602,16 +602,17 @@ def connecton_check():
     page = session.get(url)
     print('Perekrestok connection status:', page.status_code)
     # 5ka
-    session = requests.Session()
-    session.headers = {'Accept': 'application/json',                
-                       'Content-Type': 'application/json',                
-                       'Connection': 'keep-alive',
-                       'Keep-Alive': 'timeout=15'}    
-    kwargs = {'path': '/','domain': '5ka.ru'}
-    cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)    
-    session.cookies.set_cookie(cookie)
+    session = requests.Session()    
+    # session.headers = {'Accept': 'application/json',                
+    #                    'Content-Type': 'application/json',                
+    #                    'Connection': 'keep-alive',
+    #                    'Keep-Alive': 'timeout=15'}    
+    # kwargs = {'path': '/','domain': '5ka.ru'}
+    # cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)    
+    # session.cookies.set_cookie(cookie)
     try:
-        special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=')
+        special_offers = session.get('https://5ka.ru')
+        # special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=')
         print('5ka connection status:', special_offers.status_code)
     except ConnectionError:
         print('5ka connection status: failed')
