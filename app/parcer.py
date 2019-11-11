@@ -587,7 +587,6 @@ def connecton_check():
     kwargs = {'domain': '5ka.ru'}
     cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
     session.cookies.set_cookie(cookie)
-    pka_category_skus = {}    
     try:
         special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=')
         print('Lenta connection status:', special_offers.status_code)
@@ -611,7 +610,7 @@ def connecton_check():
     session = requests.Session()
     cookie = requests.cookies.create_cookie('region', '16')
     session.cookies.set_cookie(cookie)
-    url = 'https://www.perekrestok.ru/assortment?page='+str(num_page)+'&sort=rate_desc'
+    url = 'https://www.perekrestok.ru/assortment?page=1&sort=rate_desc'
     page = session.get(url)
     print('Perekrestok connection status:', page.status_code)
 
