@@ -601,18 +601,19 @@ def connecton_check():
     url = 'https://www.perekrestok.ru/assortment?page=1&sort=rate_desc'
     page = session.get(url)
     print('Perekrestok connection status:', page.status_code)
-    # 5ka
-    session = requests.Session()    
-    # session.headers = {'Accept': 'application/json',                
-    #                    'Content-Type': 'application/json',                
-    #                    'Connection': 'keep-alive',
-    #                    'Keep-Alive': 'timeout=15'}    
-    # kwargs = {'path': '/','domain': '5ka.ru'}
-    # cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)    
-    # session.cookies.set_cookie(cookie)
+    # 5ka    
+    # header_name=X-Authorization; 
+    # _gcl_au=1.1.609425895.1573474776; 
+    # location_id=1814; 
+    # token=Token69f1c9e674ca3e7c87faea771365e0dadf0499df    
+    session = requests.Session()
+    for name, value in [('header_name', 'X-Authorization'), ('_gcl_au', '1.1.609425895.1573474776'), ('location_id', '1814'), ('token', 'Token69f1c9e674ca3e7c87faea771365e0dadf0499df')]:    
+        # kwargs = {'domain': 'lenta.com'}
+        cookie = requests.cookies.create_cookie(name, value)
+        session.cookies.set_cookie(cookie)    
     try:
-        special_offers = session.get('https://5ka.ru')
-        # special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=')
+        # special_offers = session.get('https://5ka.ru')
+        special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=')
         print('5ka connection status:', special_offers.status_code)
     except ConnectionError:
         print('5ka connection status: failed')
@@ -780,7 +781,7 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
 def main_search():    
     # lenta_category_skus       = LENTA()
     # perekrestok_category_skus = PEREKRESTOK()
-    # pka_category_skus         = PKA()
+    pka_category_skus         = PKA()
 
     # удаляем все записи в таблице Sku
     db.session.query(Sku).delete()
