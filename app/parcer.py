@@ -777,9 +777,7 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
     
     return {'carousel_indicators': html_text_carousel_indicators, 'carousel_inner': html_text_carousel_inner, 'html_text': html_text, 'show_load_button': show_load_button}
 
-def main_search():
-    get_news()
-    print('news done.')
+def main_search():    
     # lenta_category_skus       = LENTA()
     # perekrestok_category_skus = PEREKRESTOK()
     # pka_category_skus         = PKA()

@@ -9,7 +9,9 @@ from flask      import render_template, request, make_response, url_for
 
 @bp.route('/')
 def index():
-    connecton_check()
+    # connecton_check()
+    get_news()
+    print('News done.')
     news = db.session.query(News).get(1)
     return render_template('index.html', news=news)
         
