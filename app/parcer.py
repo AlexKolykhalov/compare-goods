@@ -778,10 +778,11 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
     return {'carousel_indicators': html_text_carousel_indicators, 'carousel_inner': html_text_carousel_inner, 'html_text': html_text, 'show_load_button': show_load_button}
 
 def main_search():
-    # get_news()
+    get_news()
+    print('news done.')
     # lenta_category_skus       = LENTA()
     # perekrestok_category_skus = PEREKRESTOK()
-    pka_category_skus         = PKA()
+    # pka_category_skus         = PKA()
 
     # удаляем все записи в таблице Sku
     db.session.query(Sku).delete()
