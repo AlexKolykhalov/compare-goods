@@ -589,9 +589,9 @@ def connecton_check():
     session.cookies.set_cookie(cookie)
     try:
         special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=')
-        print('Lenta connection status:', special_offers.status_code)
+        print('5ka connection status:', special_offers.status_code)
     except ConnectionError:
-        print('Lenta connection status: failed')
+        print('5ka connection status: failed')
     
     # Lenta
     session = requests.Session()
