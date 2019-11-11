@@ -343,7 +343,7 @@ def LENTA():
 
 
 
-def get_news():
+def get_news():    
     news_lenta       = ''
     news_perekrestok = ''
     news_pka         = ''
