@@ -603,13 +603,13 @@ def connecton_check():
     print('Perekrestok connection status:', page.status_code)
     # 5ka
     session = requests.Session()
-    # session.headers = {'Accept': 'application/json',                
-    #                    'Content-Type': 'application/json',                
-    #                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0'}
+    session.headers = {'Accept': 'application/json',                
+                       'Content-Type': 'application/json',                
+                       'Connection': 'keep-alive',
+                       'Keep-Alive': 'timeout=15'}
     # session.get('https://5ka.ru')
-    # kwargs = {'domain': '5ka.ru'}
-    # cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
-    cookie = requests.cookies.create_cookie('location_id', '1871')
+    kwargs = {'domain': '5ka.ru'}
+    cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)    
     session.cookies.set_cookie(cookie)
     try:
         special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=')
