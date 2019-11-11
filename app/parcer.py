@@ -344,10 +344,6 @@ def LENTA():
 
 
 def get_news():
-    # news = db.session.query(News).get(1)
-    # if news and news.date_news.day == dt.now().day:
-    #     return news.html_news
-    print('News')
     news_lenta       = ''
     news_perekrestok = ''
     news_pka         = ''
@@ -373,10 +369,11 @@ def get_news():
             news_description = news_content.find('div', {'class': 'news-item__description'}).text.replace('\r\n', '').strip()
             news_href        = news_content.find('div', {'class': 'news-item__more'}).find('a', {'class': 'link'})['href']
             news_html        = '<hr><b>'+news_title+'</b><br>'+news_description+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
-            news_lenta       = news_lenta + news_html
-    print(news_lenta)
+            news_lenta       = news_lenta + news_html    
     #perekrestok    
     session = requests.Session()
+    cookie = requests.cookies.create_cookie('region', '16')
+    session.cookies.set_cookie(cookie)
     page = session.get('https://www.perekrestok.ru/promos')
     perekrestok_news_content = BeautifulSoup(page.content, 'html.parser').find_all('li', {'class': 'xf-promo__item'})
     for news_content in perekrestok_news_content:
@@ -384,8 +381,7 @@ def get_news():
         page_news              = session.get(news_href)
         print(BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'}))
         page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
-        news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
-    print(news_perekrestok)
+        news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'    
     #pka
     session = requests.Session()
     session.get('https://5ka.ru')
@@ -396,8 +392,6 @@ def get_news():
     pka_news_array   = pka_news_content['results'][:4]
     for news_content in pka_news_array:
         news_pka = news_pka+'<hr>'+news_content['preview_text']+'<br><a href="https://5ka.ru/news/'+str(news_content['id'])+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
-    print(news_pka)
-    
     news_array = '''<ul class="nav nav-tabs">
                         <li class="active"><a data-toggle="tab" href="#news_lenta"><img src="https://lenta.gcdn.co/static/pics/shortcuts/favicon-32x32.fb90679fd6d6da31ec7059b1cd4985e1.png"></a></li>
                         <li><a data-toggle="tab" href="#news_perekrestok"><img src="https://www.perekrestok.ru/favicon.ico"></a></li>
@@ -424,8 +418,6 @@ def get_news():
         db.session.add(news)
         
     db.session.commit()
-
-    # return news_array
 
 def get_catalog():
     goods = {
@@ -748,9 +740,7 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
     return {'carousel_indicators': html_text_carousel_indicators, 'carousel_inner': html_text_carousel_inner, 'html_text': html_text, 'show_load_button': show_load_button}
 
 def main_search():
-
     get_news()
-
     lenta_category_skus       = LENTA()
     perekrestok_category_skus = PEREKRESTOK()
     pka_category_skus         = PKA()
@@ -833,7 +823,6 @@ def main_search():
                           sku_html_1=sku_html_1,
                           sku_html_2=sku_html_2,
                           sku_html_3=sku_html_3,
-                        #   sku_type=elem1['type'], # ??? тип не нужен, см. массив product
                           sku_twin=True if len(product)>1 else False)
 
                 db.session.add(sku)

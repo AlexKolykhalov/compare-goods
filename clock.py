@@ -10,11 +10,12 @@ sched = BlockingScheduler()
 @sched.scheduled_job('interval', minutes=1)
 def timed_job():
     start = dt.now()
+    print('---> Job is start at', start)
     app = create_app()
     with app.app_context():
         main_search()
     end = dt.now()
-    print('This job is done.', start,'---', end)
+    print('---> Job is done at', end)
 
 # @sched.scheduled_job('cron', day_of_week='mon-fri', hour=7)
 # def scheduled_job():
