@@ -621,7 +621,7 @@ def connecton_check():
     # print('Lenta connection status:', r.status_code)
     # r = requests.get('https://www.perekrestok.ru/assortment?page=1&sort=rate_desc')
     # print('Perekrestok connection status:', r.status_code)
-    r = requests.get('https://5ka.ru')
+    r = requests.get('http://5ka.ru')
     print('5ka connection status:', r.status_code)
     # print('5ka connection status:', special_offers.status_code)
     
