@@ -607,6 +607,12 @@ def connecton_check():
     # location_id=1814; 
     # token=Token69f1c9e674ca3e7c87faea771365e0dadf0499df    
     session = requests.Session()
+    session.headers = {'Accept': 'application/json',                
+                       'Content-Type': 'application/json',                
+                       'Host': '5ka.ru'}
+    kwargs = {'domain': '5ka.ru'}
+    cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
+    session.cookies.set_cookie(cookie)
     # for name, value in [('header_name', 'X-Authorization'), ('_gcl_au', '1.1.609425895.1573474776'), ('location_id', '1814'), ('token', 'Token69f1c9e674ca3e7c87faea771365e0dadf0499df')]:
     #     cookie = requests.cookies.create_cookie(name, value)
     #     session.cookies.set_cookie(cookie)
