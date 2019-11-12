@@ -1,2 +1,2 @@
-web: flask db upgrade; gunicorn my_app:app --timeout 10
+web: flask db upgrade; gunicorn my_app:app
 clock: python clock.py
