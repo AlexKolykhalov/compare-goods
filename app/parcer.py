@@ -619,8 +619,10 @@ def connecton_check():
     # special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=')
     
     r = requests.get('https://www.perekrestok.ru/assortment?page=1&sort=rate_desc')
-    print('Perekrestok connection status:', r.status_code)
-    r = requests.get('http://5ka.ru')
+    print('Perekrestok connection status:', r.status_code)    
+    r = requests.get('https://www.rambler.ru/')
+    print('rambler:', r.status_code)
+    r = requests.get('https://5ka.ru/')
     print('5ka connection status:', r.status_code)
     # print('5ka connection status:', special_offers.status_code)
     
