@@ -628,7 +628,7 @@ def connecton_check():
     cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
     session.cookies.set_cookie(cookie)
     special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=').json()
-    print('5ka connection status:', special_offers)
+    print('5ka connection status:', special_offers['next'])
     # print('5ka connection status:', special_offers.status_code)
     
 
