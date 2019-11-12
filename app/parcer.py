@@ -581,19 +581,19 @@ def costruct_name(name):
     return ' '.join(costruct_name.split())
 
 def connecton_check():
-    # # Lenta
-    # session = requests.Session()
-    # session.headers = {'Accept': 'application/json',                
-    #                    'Content-Type': 'application/json',                
-    #                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0'}
+    # Lenta
+    session = requests.Session()
+    session.headers = {'Accept': 'application/json',                
+                       'Content-Type': 'application/json',                
+                       'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0'}
 
-    # for name, value in [('CityCookie', 'lpc'), ('lentaT2', 'lpc'), ('Store', '0148')]:    
-    #     kwargs = {'domain': 'lenta.com'}
-    #     cookie = requests.cookies.create_cookie(name, value, **kwargs)
-    #     session.cookies.set_cookie(cookie)
+    for name, value in [('CityCookie', 'lpc'), ('lentaT2', 'lpc'), ('Store', '0148')]:    
+        kwargs = {'domain': 'lenta.com'}
+        cookie = requests.cookies.create_cookie(name, value, **kwargs)
+        session.cookies.set_cookie(cookie)
 
-    # page = session.get('https://lenta.com/catalog/')
-    # print('Lenta connection status:', page.status_code)
+    page = session.get('https://lenta.com/catalog/')
+    print('Lenta connection status:', page.status_code)
     # # Perekrestok
     # session = requests.Session()
     # cookie = requests.cookies.create_cookie('region', '16')
@@ -617,10 +617,9 @@ def connecton_check():
     #     cookie = requests.cookies.create_cookie(name, value)
     #     session.cookies.set_cookie(cookie)
     # special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=')
-    # r = requests.get('https://lenta.com/catalog/')
-    # print('Lenta connection status:', r.status_code)
-    # r = requests.get('https://www.perekrestok.ru/assortment?page=1&sort=rate_desc')
-    # print('Perekrestok connection status:', r.status_code)
+    
+    r = requests.get('https://www.perekrestok.ru/assortment?page=1&sort=rate_desc')
+    print('Perekrestok connection status:', r.status_code)
     r = requests.get('http://5ka.ru')
     print('5ka connection status:', r.status_code)
     # print('5ka connection status:', special_offers.status_code)
