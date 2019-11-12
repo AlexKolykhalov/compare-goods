@@ -617,7 +617,11 @@ def connecton_check():
     #     cookie = requests.cookies.create_cookie(name, value)
     #     session.cookies.set_cookie(cookie)
     # special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=')
-    r = requests.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=')
+    # r = requests.get('https://lenta.com/catalog/')
+    # print('Lenta connection status:', r.status_code)
+    # r = requests.get('https://www.perekrestok.ru/assortment?page=1&sort=rate_desc')
+    # print('Perekrestok connection status:', r.status_code)
+    r = requests.get('https://5ka.ru')
     print('5ka connection status:', r.status_code)
     # print('5ka connection status:', special_offers.status_code)
     
