@@ -623,6 +623,9 @@ def connecton_check():
 #     r = requests.get('https://www.rambler.ru/')
 #     print('rambler:', r.status_code)
     r = requests.get('https://5ka.ru/')
+    print('Headers', r.headers )    
+    print('request:', r.request.body)
+    print('url:', r.url)
     print('5ka connection status:', r.status_code)
     # print('5ka connection status:', special_offers.status_code)
     
