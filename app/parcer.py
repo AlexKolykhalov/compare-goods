@@ -581,62 +581,14 @@ def costruct_name(name):
     return ' '.join(costruct_name.split())
 
 def connecton_check():
-#     # Lenta
-#     session = requests.Session()
-#     session.headers = {'Accept': 'application/json',                
-#                        'Content-Type': 'application/json',                
-#                        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0'}
-
-#     for name, value in [('CityCookie', 'lpc'), ('lentaT2', 'lpc'), ('Store', '0148')]:    
-#         kwargs = {'domain': 'lenta.com'}
-#         cookie = requests.cookies.create_cookie(name, value, **kwargs)
-#         session.cookies.set_cookie(cookie)
-
-#     page = session.get('https://lenta.com/catalog/')
-#     print('Lenta connection status:', page.status_code)
-    # # Perekrestok
-    # session = requests.Session()
-    # cookie = requests.cookies.create_cookie('region', '16')
-    # session.cookies.set_cookie(cookie)
-    # url = 'https://www.perekrestok.ru/assortment?page=1&sort=rate_desc'
-    # page = session.get(url)
-    # print('Perekrestok connection status:', page.status_code)
-    # 5ka    
-    # header_name=X-Authorization; 
-    # _gcl_au=1.1.609425895.1573474776; 
-    # location_id=1814; 
-    # token=Token69f1c9e674ca3e7c87faea771365e0dadf0499df    
-    # session = requests.Session()
-    # session.headers = {'Accept': 'application/json',                
-    #                    'Content-Type': 'application/json',                
-    #                    'Host': '5ka.ru'}
-    # kwargs = {'domain': '5ka.ru'}
-    # cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
-    # session.cookies.set_cookie(cookie)
-    # for name, value in [('header_name', 'X-Authorization'), ('_gcl_au', '1.1.609425895.1573474776'), ('location_id', '1814'), ('token', 'Token69f1c9e674ca3e7c87faea771365e0dadf0499df')]:
-    #     cookie = requests.cookies.create_cookie(name, value)
-    #     session.cookies.set_cookie(cookie)
-    # special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=')
-    
-#     r = requests.get('https://www.perekrestok.ru/assortment?page=1&sort=rate_desc')
-#     print('Perekrestok connection status:', r.status_code)    
-#     r = requests.get('https://www.rambler.ru/')
-#     print('rambler:', r.status_code)
-    # session = requests.Session()
-    # session.get('https://5ka.ru')
-    # kwargs = {'domain': '5ka.ru'}
-    # cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
-    # session.cookies.set_cookie(cookie)
-    # special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=').json()
-    # print('5ka connection status:', special_offers['next'])
+    headers={
+        'Referer': 'https://5ka.ru/'        
+    }
     try:
-        r = requests.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=', verify=False)
+        r = requests.get('https://5ka.ru/', timeout=25, headers=headers)
         print(r.text)
-    except requests.exceptions.ConnectionError:
-        print('Connection error')    
-
-    # print('5ka connection status:', special_offers.status_code)
-    
+    except requests.exceptions.ConnectTimeout:
+        print('-----> TOO SLOW')
 
 # варианты сортировок
 def by_discount(elem):
