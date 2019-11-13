@@ -1,2 +1,2 @@
-web: gunicorn my_app:app --worker-class eventlet
+web: gunicorn my_app:app
 clock: python clock.py
