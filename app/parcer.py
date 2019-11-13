@@ -9,8 +9,10 @@ from string     import ascii_uppercase, ascii_lowercase, digits
 from random     import choices
 from sqlalchemy import desc
 
-
 import requests, json
+
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 
 
 # Мидии VICI Любо есть маринованные в масле Россия, 200г (LENTA) 88 Мидии Vici Любо есть копченые в масле 200г (PEREKRESTOK) (token set ratio: 88)
@@ -581,14 +583,21 @@ def costruct_name(name):
     return ' '.join(costruct_name.split())
 
 def connecton_check():
-    headers={
-        'Referer': 'https://5ka.ru/'        
-    }
-    try:
-        r = requests.get('https://5ka.ru/', timeout=25, headers=headers)
-        print(r.text)
-    except requests.exceptions.ConnectTimeout:
-        print('-----> TOO SLOW')
+    session = requests.Session()
+    retry = Retry(connect=3, backoff_factor=0.5)
+    adapter = HTTPAdapter(max_retries=retry)
+    session.mount('http://', adapter)
+    session.mount('https://', adapter)
+
+    url = 'https://5ka.ru/'
+    s = session.get(url)
+    print(s)
+    
+    # try:
+    #     r = requests.get('https://5ka.ru/', timeout=25)
+    #     print(r.text)
+    # except requests.exceptions.ConnectTimeout:
+    #     print('-----> TOO SLOW')
 
 # варианты сортировок
 def by_discount(elem):
