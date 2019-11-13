@@ -1,5 +1,5 @@
 from app        import redis_store, db
-from app.models import Sku, News, Lenta, Perekrestok, Pka
+from app.models import Sku, News #Lenta, Perekrestok, Pka
 
 from fuzzywuzzy import fuzz
 from threading  import Thread
@@ -11,28 +11,6 @@ from sqlalchemy import desc
 
 import requests, json
 
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
-
-
-# Мидии VICI Любо есть маринованные в масле Россия, 200г (LENTA) 88 Мидии Vici Любо есть копченые в масле 200г (PEREKRESTOK) (token set ratio: 88)
-s = 'Чипсы Lays Из печи Нежный сыр с зеленью 85г'
-s1 = 'Чипсы LAYS со вкусом Нежный сыр с зеленью Россия, 85г'
-
-token_set_ratio = fuzz.token_set_ratio(s, s1)
-sa = [1,2,3,4,1]
-# v = 0
-# for elem in sa[v:len(sa)]:
-#         k = v + 1
-#         d = k        
-#         for elem1 in sa[k:len(sa)]:            
-#             if elem == elem1:
-#                 del sa[d]
-#             else:                
-#                 print(elem, elem1)
-#                 print('index:', sa.index(elem), sa.index(elem1))
-#             d += 1
-#         v += 1
 
 
 def get_data_slider(markets): # нужно ли?(слайдеры на первых страницах)
@@ -79,10 +57,6 @@ def get_data_slider(markets): # нужно ли?(слайдеры на перв�
 
 
 def PEREKRESTOK():
-    # perekrestok = db.session.query(Perekrestok).get(1)
-    # if perekrestok and perekrestok.date_perekrestok.day == dt.now().day:
-    #     return json.loads(perekrestok.html_perekrestok)
-        
     # ПЕРЕКРЁСТОК
     session = requests.Session()
     cookie = requests.cookies.create_cookie('region', '16')
@@ -101,24 +75,15 @@ def PEREKRESTOK():
             category = get_category(product['data-gtm-category-name'])        
             if category == '':
                 _all += 1
-                continue        
+                continue
             product_name = product['data-gtm-product-name'].replace('ё', 'е')
-            
-            # product_link = product.find('a', {'class': 'xf-product-title__link js-product__title'})['href']
-            # product_page = session.get('https://www.perekrestok.ru'+product_link)
-            # products_content = BeautifulSoup(product_page.content, 'html.parser')
-            # for row in products_content.find_all('tr', {'class': 'xf-product-table__row'}):
-            #     if row.find('th', {'class': 'xf-product-table__col-header'}).text.strip() == 'Торговая марка':
-            #         product_brand = row.find('td', {'class': 'xf-product-table__col'}).text.strip()
-            #         print(product_brand)
-            #         break
             try:
                 new_price = round(float(product.find('div', {'class': 'xf-price xf-product-cost__current js-product__cost _highlight'})['data-cost']), 2)
                 old_price = round(float(product.find('div', {'class': 'xf-price xf-product-cost__prev js-product__old-cost'})['data-cost']), 2)
                 discount_text = product.find('div', {'class': 'xf-product-cost__old-price'}).find('p').text
                 discount = int(discount_text[1:len(discount_text)-1])
             except TypeError:
-                # записываем новую цену равной старой, т.к. скидки не оказалось 
+                # записываем новую цену равной старой, т.к. скидки не оказалось
                 new_price = round(float(product.find('div', {'class': 'xf-price xf-product-cost__current js-product__cost'})['data-cost']), 2)
                 old_price = new_price
                 discount = 0
@@ -143,17 +108,8 @@ def PEREKRESTOK():
             _in += 1
         num_page += 1
     print('Всего товаров в ПЕРЕКРЁСТОК:', _all, 'Внесено:', _in)
-    # perekrestok = db.session.query(Perekrestok).get(1)
-    # if perekrestok:
-    #     perekrestok.html_perekrestok = json.dumps(perekrestok_category_skus)
-    #     perekrestok.date_perekrestok = dt.now()
-    # else:
-    #     perekrestok = Perekrestok(html_perekrestok=json.dumps(perekrestok_category_skus), date_perekrestok=dt.now())
-    #     db.session.add(perekrestok)
-    # db.session.commit()
-    return perekrestok_category_skus
     
-
+    return perekrestok_category_skus
 
     # # КРУПА
     # session = requests.Session()
@@ -183,20 +139,32 @@ def PEREKRESTOK():
 
 def PKA(): # если разбить категории на подкатегории, то можно будет избавиться от двойного кода
     # ПЯТЁРОЧКА
+    pka_category_skus = {}
     session = requests.Session()
-    session.get('https://5ka.ru')
+    try:
+        session.get('https://5ka.ru', timeout=25)
+    except requests.exceptions.ConnectTimeout:
+        print('------> 5ka FAILED')
+        return pka_category_skus
     kwargs = {'domain': '5ka.ru'}
     cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
     session.cookies.set_cookie(cookie)
-    pka_category_skus = {}
     special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=').json()
     if len(special_offers['results']) == 0:
         return pka_category_skus
-    groups = session.get('https://5ka.ru/api/v2/categories/').json()    
-    for group in groups:    
+    try:
+        groups = session.get('https://5ka.ru/api/v2/categories/').json()
+    except json.decoder.JSONDecodeError:
+        print('--->  https://5ka.ru/api/v2/categories/, group FAILED')
+        return pka_category_skus    
+    for group in groups:
         category = get_category(group['parent_group_name'])
         if category == '':
-            subgroups = session.get('https://5ka.ru/api/v2/categories/'+group['parent_group_code']).json()
+            try:
+                subgroups = session.get('https://5ka.ru/api/v2/categories/'+group['parent_group_code']).json()
+            except json.decoder.JSONDecodeError:
+                print('--->', 'https://5ka.ru/api/v2/categories/'+group['parent_group_code'], 'subgroup FAILED')
+                continue            
             for subgroup in subgroups:
                 category = get_category(subgroup['group_name'])
                 if category == '':
@@ -206,15 +174,19 @@ def PKA(): # если разбить категории на подкатего�
                 url = 'https://5ka.ru/api/v2/special_offers/?categories='+subgroup['group_code']+'&ordering=&page=1&price_promo__gte=&price_promo__lte=&records_per_page=12&search=&store='
                 k = 0
                 while True:
-                    get = session.get(url).json()
+                    try:
+                        get = session.get(url).json()
+                    except json.decoder.JSONDecodeError:
+                        print('--->', category+' ('+subgroup['group_name']+')')
+                        continue
                     for skus in get['results']:
                         name = costruct_name(skus['name'])
                         weight = name.split(' ')[len(name.split(' '))-1]
                         pka_skus = {'name': name,
                                     'img': skus['img_link'],
                                     'href': 'https://5ka.ru/special_offers/'+str(skus['id']),
-                                    'new_price': format(float(skus['current_prices']['price_promo__min']), '.2f'),
-                                    'old_price': format(float(skus['current_prices']['price_reg__min']), '.2f'),
+                                    'new_price': skus['current_prices']['price_promo__min'], #format(float(skus['current_prices']['price_promo__min']), 2),
+                                    'old_price': skus['current_prices']['price_reg__min'],   #format(float(skus['current_prices']['price_reg__min']), 2),
                                     'discount': round((skus['current_prices']['price_reg__min']-skus['current_prices']['price_promo__min'])/skus['current_prices']['price_reg__min']*100),
                                     'weight': weight,
                                     'type': '(5KA)',
@@ -232,15 +204,19 @@ def PKA(): # если разбить категории на подкатего�
             url = 'https://5ka.ru/api/v2/special_offers/?categories='+group['parent_group_code']+'&ordering=&page=1&price_promo__gte=&price_promo__lte=&records_per_page=12&search=&store='
             k = 0
             while True:                
-                get = session.get(url).json()
+                try:
+                    get = session.get(url).json()
+                except json.decoder.JSONDecodeError:
+                    print('--->', category)
+                    continue
                 for skus in get['results']:
                     name = costruct_name(skus['name'])
                     weight = name.split(' ')[len(name.split(' '))-1]
                     pka_skus = {'name': name, 
                                 'img': skus['img_link'],                                
                                 'href': 'https://5ka.ru/special_offers/'+str(skus['id']),
-                                'new_price': format(float(skus['current_prices']['price_promo__min']), '.2f'),
-                                'old_price': format(float(skus['current_prices']['price_reg__min']), '.2f'),
+                                'new_price': skus['current_prices']['price_promo__min'], #format(float(skus['current_prices']['price_promo__min']), 2),
+                                'old_price': skus['current_prices']['price_reg__min'],   #format(float(skus['current_prices']['price_reg__min']), 2),
                                 'discount': round((skus['current_prices']['price_reg__min']-skus['current_prices']['price_promo__min'])/skus['current_prices']['price_reg__min']*100),
                                 'weight': weight, 
                                 'type': '(5KA)',
@@ -251,22 +227,10 @@ def PKA(): # если разбить категории на подкатего�
                 url = get['next']
                 if url == None:
                     break            
-            print('ПЯТЁРОЧКА кат. '+category+' ('+group['parent_group_name']+') внесено:', k)    
-    # pka = db.session.query(Pka).get(1)
-    # if pka:
-    #     pka.html_pka = json.dumps(pka_category_skus)
-    #     pka.date_pka = dt.now()
-    # else:
-    #     pka = Pka(html_pka=json.dumps(pka_category_skus), date_pka=dt.now())    
-    #     db.session.add(pka)
-    # db.session.commit()
+            print('ПЯТЁРОЧКА кат. '+category+' ('+group['parent_group_name']+') внесено:', k)
     return pka_category_skus
 
 def LENTA():
-    # lenta = db.session.query(Lenta).get(1)
-    # if lenta and lenta.date_lenta.day == dt.now().day:
-    #     return json.loads(lenta.html_lenta)
-
     # ЛЕНТА
     session = requests.Session()
     session.headers = {'Accept': 'application/json',                
@@ -332,16 +296,7 @@ def LENTA():
                     offset = offset + limit
                 print('ЛЕНТА кат. '+category+' ('+group_category['name']+') внесено:', k)
     else:
-        print('LENTA', page.status_code, page.reason)    
-    
-    # lenta = db.session.query(Lenta).get(1)
-    # if lenta:
-    #     lenta.html_lenta = json.dumps(lenta_category_skus)
-    #     lenta.date_lenta = dt.now()
-    # else:
-    #     lenta = Lenta(html_lenta=json.dumps(lenta_category_skus), date_lenta=dt.now())    
-    #     db.session.add(lenta)
-    # db.session.commit()
+        print('LENTA', page.status_code, page.reason)
 
     return lenta_category_skus
 
@@ -387,14 +342,24 @@ def get_news():
         news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'    
     #pka
     session = requests.Session()
-    session.get('https://5ka.ru')
-    kwargs = {'domain': '5ka.ru'}
-    cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
-    session.cookies.set_cookie(cookie)
-    pka_news_content = session.get('https://5ka.ru/api/news/').json()
-    pka_news_array   = pka_news_content['results'][:4]
-    for news_content in pka_news_array:
-        news_pka = news_pka+'<hr>'+news_content['preview_text']+'<br><a href="https://5ka.ru/news/'+str(news_content['id'])+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
+    try:
+        session.get('https://5ka.ru', timeout=25)
+        kwargs = {'domain': '5ka.ru'}
+        cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
+        session.cookies.set_cookie(cookie)
+        pka_news_content = session.get('https://5ka.ru/api/news/').json()
+        pka_news_array   = pka_news_content['results'][:4]
+        for news_content in pka_news_array:
+            news_pka = news_pka+'<hr>'+news_content['preview_text']+'<br><a href="https://5ka.ru/news/'+str(news_content['id'])+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
+    except requests.exceptions.ConnectTimeout:
+        news_pka = ''
+        print('------> get_news, 5ka FAILED')
+
+    
+    news_lenta       = news_lenta if news_lenta else '<hr>На текущий момент свежих новостей нет.'
+    news_perekrestok = news_perekrestok if news_perekrestok else '<hr>На текущий момент свежих новостей нет.'
+    news_pka         = news_pka if news_pka else '<hr>На текущий момент свежих новостей нет.'
+
     news_array = '''<ul class="nav nav-tabs">
                         <li class="active"><a data-toggle="tab" href="#news_lenta"><img src="https://lenta.gcdn.co/static/pics/shortcuts/favicon-32x32.fb90679fd6d6da31ec7059b1cd4985e1.png"></a></li>
                         <li><a data-toggle="tab" href="#news_perekrestok"><img src="https://www.perekrestok.ru/favicon.ico"></a></li>
@@ -421,6 +386,7 @@ def get_news():
         db.session.add(news)
         
     db.session.commit()
+    print('News updated')
 
 def get_catalog():
     goods = {
@@ -582,50 +548,35 @@ def costruct_name(name):
     
     return ' '.join(costruct_name.split())
 
-def connecton_check():
+def connecton_check(): ## DELETE
     
-    headers = {
-        'Host': '5ka.ru',
-        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:70.0) Gecko/20100101 Firefox/70.0',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Referer': 'https://yandex.ru/',
-        'DNT': '1',
-        'Connection': 'keep-alive',
-        'Cookie': 'header_name=X-Authorization; _gcl_au=1.1.279000607.1573634911; location_id=1814; token=Tokenb21890fea317d0054666e31ff55e55dc13324bc8',
-        'Upgrade-Insecure-Requests': '0',
-        'If-Modified-Since': 'Mon, 28 Oct 2019 12:17:35 GMT',
-        'If-None-Match': 'W/"5db6dc',
-        'Cache-Control': 'max-age=0',
-    }    
+    # headers = {
+    #     'Host': '5ka.ru',
+    #     'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:70.0) Gecko/20100101 Firefox/70.0',
+    #     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+    #     'Accept-Language': 'ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3',
+    #     'Accept-Encoding': 'gzip, deflate, br',
+    #     'Referer': 'https://yandex.ru/',
+    #     'DNT': '1',
+    #     'Connection': 'keep-alive',
+    #     'Cookie': 'header_name=X-Authorization; _gcl_au=1.1.279000607.1573634911; location_id=1814; token=Tokenb21890fea317d0054666e31ff55e55dc13324bc8',
+    #     'Upgrade-Insecure-Requests': '0',
+    #     'If-Modified-Since': 'Mon, 28 Oct 2019 12:17:35 GMT',
+    #     'If-None-Match': 'W/"5db6dc',
+    #     'Cache-Control': 'max-age=0',
+    # }    
     try:
-        r = requests.get('https://5ka.ru/', timeout=25, headers=headers)
+        r = requests.get('https://5ka.ru/', timeout=25)
         print(r.text)
     except requests.exceptions.ConnectTimeout:
         print('-----> TOO SLOW')
 
 # варианты сортировок
 def by_discount(elem):
-    # if 'prod' in elem.keys():
-    #     max_discount = 0
-    #     for prod in elem['prod']:
-    #         if prod['discount']>max_discount:
-    #             max_discount = prod['discount']
-    #     return max_discount
-    
     return elem['discount']
 
 def by_price(elem):
-    # max_price = 0    
-    # price = elem['old_price'] if elem['new_price'] == '0.00' else elem['new_price']
-    # if float(price)>max_price:
-    #     max_price = float(price)
-    # return max_price
-
-    return elem['new_price'] 
-
-
+    return elem['new_price']
 
 
 def get_html_product(product_array, index, key, reverse):
@@ -684,7 +635,7 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
         if sort_method == 'null':
             if category_number:
                 if checked:
-                    sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_category==category_number, Sku.sku_twin==1).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
+                    sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_category==category_number, Sku.sku_twin==True).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
                 else:
                     sorted_products = db.session.query(Sku.sku_html_1).filter_by(sku_category=category_number).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
             else:
@@ -701,7 +652,7 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
         elif sort_method == 'asc':
             if category_number:
                 if checked:
-                    sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_category==category_number, Sku.sku_twin==1).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
+                    sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_category==category_number, Sku.sku_twin==True).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
                 else:
                     sorted_products = db.session.query(Sku.sku_html_2).filter_by(sku_category=category_number).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
             else:
@@ -718,7 +669,7 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
         elif sort_method == 'desc':
             if category_number:
                 if checked:
-                    sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_category==category_number, Sku.sku_twin==1).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
+                    sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_category==category_number, Sku.sku_twin==True).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
                 else:
                     sorted_products = db.session.query(Sku.sku_html_3).filter_by(sku_category=category_number).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
             else:
@@ -766,8 +717,9 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
     return {'carousel_indicators': html_text_carousel_indicators, 'carousel_inner': html_text_carousel_inner, 'html_text': html_text, 'show_load_button': show_load_button}
 
 def main_search():    
-    # lenta_category_skus       = LENTA()
-    # perekrestok_category_skus = PEREKRESTOK()
+    get_news()
+    lenta_category_skus       = LENTA()
+    perekrestok_category_skus = PEREKRESTOK()
     pka_category_skus         = PKA()
 
     # удаляем все записи в таблице Sku

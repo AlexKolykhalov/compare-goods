@@ -1,18 +1,15 @@
 from app        import db
 from app.main   import bp
 from app.models import Sku, News
-from app.parcer import connecton_check, main_search, get_catalog, html_creator, get_news #(delete main_search & get_news)
+from app.parcer import get_catalog, html_creator, main_search, get_news, connecton_check #(remove main_search)
 
-from flask      import render_template, request, make_response, url_for
+from flask      import render_template, request, url_for
 
 
 
 @bp.route('/')
-def index():
-    connecton_check()
-    # get_news()
-    print('News done.')
-    news = db.session.query(News).get(1)
+def index():    
+    news = db.session.query(News).get(1).html_news    
     return render_template('index.html', news=news)
         
 
@@ -48,16 +45,16 @@ def goods(category_number=None):
         title = 'Карточка товара'
     return render_template('goods.html', html_text=html_text, show_load_button=show_load_button, title=title, checked=checked)
 
-@bp.route('/search/')
-def search():
-    s = request.args.get('search_text')
-    search_result = db.session.query(Sku).get(sku).sku_html_1
-    product = '<div class="row"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-3">' + search_result + '</div></div>'
-    return render_template('goods.html', data=product)
+# @bp.route('/search/')
+# def search():
+#     s = request.args.get('search_text')
+#     search_result = db.session.query(Sku).get(sku).sku_html_1
+#     product = '<div class="row"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-3">' + search_result + '</div></div>'
+#     return render_template('goods.html', data=product)
 
-@bp.route('/news')
-def news():
-    return render_template('news.html')
+# @bp.route('/news')
+# def news():
+#     return render_template('news.html')
 
 #ajax
 @bp.route('/get_discount')

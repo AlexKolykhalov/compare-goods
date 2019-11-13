@@ -19,17 +19,17 @@ class News(db.Model):
     html_news         = db.Column(db.String)
     date_news         = db.Column(db.DateTime())
 
-class Lenta(db.Model):
-    id                = db.Column(db.Integer, primary_key=True)
-    html_lenta        = db.Column(db.String)
-    date_lenta        = db.Column(db.DateTime())
+# class Lenta(db.Model):
+#     id                = db.Column(db.Integer, primary_key=True)
+#     html_lenta        = db.Column(db.String)
+#     date_lenta        = db.Column(db.DateTime())
 
-class Perekrestok(db.Model):
-    id                = db.Column(db.Integer, primary_key=True)
-    html_perekrestok  = db.Column(db.String)
-    date_perekrestok  = db.Column(db.DateTime())
+# class Perekrestok(db.Model):
+#     id                = db.Column(db.Integer, primary_key=True)
+#     html_perekrestok  = db.Column(db.String)
+#     date_perekrestok  = db.Column(db.DateTime())
 
-class Pka(db.Model):
-    id                = db.Column(db.Integer, primary_key=True)
-    html_pka          = db.Column(db.String)
-    date_pka          = db.Column(db.DateTime())
+# class Pka(db.Model):
+#     id                = db.Column(db.Integer, primary_key=True)
+#     html_pka          = db.Column(db.String)
+#     date_pka          = db.Column(db.DateTime())

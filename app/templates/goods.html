@@ -31,6 +31,10 @@
             <div style="text-align: center;">
                 <button id="load_button" type="button" class="btn btn-info" style="margin-top: 20px;">ЗАГРУЗИТЬ ЕЩЁ</button>
             </div>
+        {% else %}
+            <div style="text-align: center;">
+                <button id="load_button" type="button" class="btn btn-info" style="margin-top: 20px; display:none;">ЗАГРУЗИТЬ ЕЩЁ</button>
+            </div>
         {% endif %}        
         <a id="back-to-top" href="#" class="btn btn-info back-to-top" role="button"><span class="glyphicon glyphicon-chevron-up"></span></a>
     </div>
@@ -92,7 +96,7 @@
                 .done(function(response){
                     if (response['html_text'] != '') {
                         $('#html_text').html(response['html_text']);
-                        _offset.text(12);                        
+                        _offset.text(12);
                     }
                     if (response['show_load_button']) {
                         $('#load_button').show();
@@ -129,7 +133,7 @@
                 .done(function(response){
                     if (response['html_text'] != '') {
                         $('#html_text').html(response['html_text']);
-                        _offset.text(12);                        
+                        _offset.text(12);
                     }
                     if (response['show_load_button']) {
                         $('#load_button').show();
@@ -164,7 +168,7 @@
                 $('#catalog_tree_modal').html(response);
             });
 
-        
+        // установка видимости кнопки Категории и боковой панели с категориями товаров  
         function myFunction() {
             if($(window).width() < 992)
             {
