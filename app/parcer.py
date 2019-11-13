@@ -583,21 +583,27 @@ def costruct_name(name):
     return ' '.join(costruct_name.split())
 
 def connecton_check():
-    session = requests.Session()
-    retry = Retry(connect=3, backoff_factor=0.5)
-    adapter = HTTPAdapter(max_retries=retry)
-    session.mount('http://', adapter)
-    session.mount('https://', adapter)
-
-    url = 'https://5ka.ru/'
-    s = session.get(url)
-    print(s)
     
-    # try:
-    #     r = requests.get('https://5ka.ru/', timeout=25)
-    #     print(r.text)
-    # except requests.exceptions.ConnectTimeout:
-    #     print('-----> TOO SLOW')
+    headers = {
+        'Host': '5ka.ru',
+        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:70.0) Gecko/20100101 Firefox/70.0',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Referer': 'https://yandex.ru/',
+        'DNT': '1',
+        'Connection': 'keep-alive',
+        'Cookie': 'header_name=X-Authorization; _gcl_au=1.1.279000607.1573634911; location_id=1814; token=Tokenb21890fea317d0054666e31ff55e55dc13324bc8',
+        'Upgrade-Insecure-Requests': '1',
+        'If-Modified-Since': 'Mon, 28 Oct 2019 12:17:35 GMT',
+        'If-None-Match': 'W/"5db6dc',
+        'Cache-Control': 'max-age=0',
+    }    
+    try:
+        r = requests.get('https://5ka.ru/', timeout=25, headers=headers)
+        print(r.text)
+    except requests.exceptions.ConnectTimeout:
+        print('-----> TOO SLOW')
 
 # варианты сортировок
 def by_discount(elem):
