@@ -594,7 +594,7 @@ def connecton_check():
         'DNT': '1',
         'Connection': 'keep-alive',
         'Cookie': 'header_name=X-Authorization; _gcl_au=1.1.279000607.1573634911; location_id=1814; token=Tokenb21890fea317d0054666e31ff55e55dc13324bc8',
-        'Upgrade-Insecure-Requests': '1',
+        'Upgrade-Insecure-Requests': '0',
         'If-Modified-Since': 'Mon, 28 Oct 2019 12:17:35 GMT',
         'If-None-Match': 'W/"5db6dc',
         'Cache-Control': 'max-age=0',
