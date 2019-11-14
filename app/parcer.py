@@ -354,7 +354,7 @@ def get_news():
         for news_content in pka_news_array:
             news_pka = news_pka+'<hr>'+news_content['preview_text']+'<br><a href="https://5ka.ru/news/'+str(news_content['id'])+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
         print('5ka news done.')
-    except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError):
+    except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
         news_pka = ''
         print('------> get_news, 5ka FAILED')
 
