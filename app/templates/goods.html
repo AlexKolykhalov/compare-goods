@@ -26,7 +26,7 @@
             <hr>
         </form>
         <span id="html_text">{{ html_text|safe }}</span>        
-        <span id="offset">12</span>
+        <span id="offset" hidden>12</span>
         {% if show_load_button%}
             <div style="text-align: center;">
                 <button id="load_button" type="button" class="btn btn-info" style="margin-top: 20px;">ЗАГРУЗИТЬ ЕЩЁ</button>
@@ -131,10 +131,8 @@
                                                         search_text: _search_text,
                                                         category_number: _category_number})
                 .done(function(response){
-                    if (response['html_text'] != '') {
-                        $('#html_text').html(response['html_text']);
-                        _offset.text(12);
-                    }
+                    $('#html_text').html(response['html_text']);
+                    _offset.text(12);
                     if (response['show_load_button']) {
                         $('#load_button').show();
                     } else {
