@@ -7,7 +7,7 @@
     </div>    
     <div class="col-xs-12 col-sm-12 col-md-8 col-lg-8">        
         <h4><b>{{title}}</b></h4>
-        <form class="form-inline">
+        <form class="form-inline" {% if show_checkbox %} style="display:block;" {% else %} style="display:none;" {% endif %}>
             <div class="form-group">
                 <select class="form-control" id="sort_method" style="margin-top: 20px;" >
                     <option value="null">По умолчанию</option>
@@ -17,7 +17,7 @@
             </div>
             <hr>
             <div class="form-group">                
-                <div class="material-switch">                    
+                <div class="material-switch">
                     <input id="switch" type="checkbox" {% if checked %} checked {% endif %}/>
                     <label for="switch" class="label-info" style="margin-right: 20px;"></label>
                     Только одинаковые
@@ -25,17 +25,11 @@
             </div>
             <hr>
         </form>
-        <span id="html_text">{{ html_text|safe }}</span>        
+        <span id="html_text">{{ html_text|safe }}</span>
         <span id="offset" hidden>12</span>
-        {% if show_load_button%}
-            <div style="text-align: center;">
-                <button id="load_button" type="button" class="btn btn-info" style="margin-top: 20px;">ЗАГРУЗИТЬ ЕЩЁ</button>
-            </div>
-        {% else %}
-            <div style="text-align: center;">
-                <button id="load_button" type="button" class="btn btn-info" style="margin-top: 20px; display:none;">ЗАГРУЗИТЬ ЕЩЁ</button>
-            </div>
-        {% endif %}        
+        <div style="text-align: center;">
+            <button id="load_button" type="button" class="btn btn-info" {% if show_load_button%} style="margin-top: 20px;" {% else %} style="margin-top: 20px; display:none;" {% endif %}>ЗАГРУЗИТЬ ЕЩЁ</button>
+        </div>
         <a id="back-to-top" href="#" class="btn btn-info back-to-top" role="button"><span class="glyphicon glyphicon-chevron-up"></span></a>
     </div>
 {% endblock %}

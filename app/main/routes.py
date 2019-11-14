@@ -33,6 +33,7 @@ def goods(category_number=None):
     html_text        = data['html_text']
     show_load_button = data['show_load_button']
     title = 'Все предложения'
+    show_checkbox = True
     if search_text:
         title = 'Результат поиска: "'+search_text.replace('%', '')+'"'
     if category_number:
@@ -43,18 +44,12 @@ def goods(category_number=None):
                 break
     if sku:
         title = 'Карточка товара'
-    return render_template('goods.html', html_text=html_text, show_load_button=show_load_button, title=title, checked=checked)
-
-# @bp.route('/search/')
-# def search():
-#     s = request.args.get('search_text')
-#     search_result = db.session.query(Sku).get(sku).sku_html_1
-#     product = '<div class="row"><div class="col-xs-12 col-sm-6 col-md-6 col-lg-3">' + search_result + '</div></div>'
-#     return render_template('goods.html', data=product)
-
-# @bp.route('/news')
-# def news():
-#     return render_template('news.html')
+        show_checkbox = False
+    return render_template('goods.html', html_text=html_text, 
+                                         show_load_button=show_load_button, 
+                                         title=title, 
+                                         checked=checked, 
+                                         show_checkbox=show_checkbox)
 
 #ajax
 @bp.route('/get_discount')
