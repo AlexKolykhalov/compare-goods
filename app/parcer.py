@@ -349,7 +349,7 @@ def get_news():
         kwargs = {'domain': '5ka.ru'}
         cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
         session.cookies.set_cookie(cookie)
-        pka_news_content = session.get('https://5ka.ru/api/news/').json()
+        pka_news_content = session.get('https://5ka.ru/api/news/', timeout=25).json()
         pka_news_array   = pka_news_content['results'][:4]
         for news_content in pka_news_array:
             news_pka = news_pka+'<hr>'+news_content['preview_text']+'<br><a href="https://5ka.ru/news/'+str(news_content['id'])+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
