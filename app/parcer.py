@@ -306,7 +306,7 @@ def get_news():
     news_lenta       = ''
     news_perekrestok = ''
     news_pka         = ''
-    
+    print('In get_news.')
     #lenta
     session = requests.Session()
     session.headers = {'Accept': 'application/json',                
@@ -328,7 +328,8 @@ def get_news():
             news_description = news_content.find('div', {'class': 'news-item__description'}).text.replace('\r\n', '').strip()
             news_href        = news_content.find('div', {'class': 'news-item__more'}).find('a', {'class': 'link'})['href']
             news_html        = '<hr><b>'+news_title+'</b><br>'+news_description+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
-            news_lenta       = news_lenta + news_html    
+            news_lenta       = news_lenta + news_html
+    print('Lenta news done.')
     #perekrestok    
     session = requests.Session()
     cookie = requests.cookies.create_cookie('region', '16')
@@ -340,6 +341,7 @@ def get_news():
         page_news              = session.get(news_href)        
         page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
         news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'    
+    print('Perekrestok news done.')
     #pka
     session = requests.Session()
     try:
@@ -351,6 +353,7 @@ def get_news():
         pka_news_array   = pka_news_content['results'][:4]
         for news_content in pka_news_array:
             news_pka = news_pka+'<hr>'+news_content['preview_text']+'<br><a href="https://5ka.ru/news/'+str(news_content['id'])+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
+        print('5ka news done.')
     except requests.exceptions.ConnectTimeout:
         news_pka = ''
         print('------> get_news, 5ka FAILED')
