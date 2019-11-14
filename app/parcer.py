@@ -247,6 +247,8 @@ def LENTA():
 
     if page.status_code == 200:
         menu = json.loads(BeautifulSoup(page.content, 'html.parser').find('div', {'class': 'header__catalog-menu-container'})['data-menu'])
+        if len(menu['groups']) == 0:
+            print('Всего товаров в ЛЕНТА: 0 Внесено: 0')
         for group in menu['groups']:
             for group_category in group['childNodes']:
                 offset     = 0
