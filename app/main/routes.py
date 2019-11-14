@@ -8,10 +8,10 @@ from flask      import render_template, request, url_for
 
 
 @bp.route('/')
-def index():    
-    news = db.session.query(News).get(1).html_news    
+def index():
+    news = db.session.query(News).get(1).html_news
     return render_template('index.html', news=news)
-        
+
 
 @bp.route('/goods/')
 @bp.route('/goods/<category_number>')
