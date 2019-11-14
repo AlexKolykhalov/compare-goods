@@ -5,17 +5,20 @@ from flask                           import current_app
 from datetime                        import datetime as dt
 from apscheduler.schedulers.blocking import BlockingScheduler
 
+import requests
+
 sched = BlockingScheduler()
 
 @sched.scheduled_job('interval', minutes=29)
 def timed_job():
     start = dt.now()
-    print('---> Job is start at', start)
+    print('------> Job is start at:', start)
+    requests.get('https://compare-goods.herokuapp.com/')    
     app = create_app()
     with app.app_context():
         main_search()
     end = dt.now()
-    print('---> Job is done at', end)
+    print('------> Job is done at:', end)
 
 # @sched.scheduled_job('cron', day_of_week='mon-fri', hour=7)
 # def scheduled_job():
