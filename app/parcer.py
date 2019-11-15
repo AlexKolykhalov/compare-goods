@@ -702,7 +702,7 @@ def main_search():
     get_news()
     lenta_category_skus       = LENTA()
     perekrestok_category_skus = PEREKRESTOK()
-    pka_category_skus         = {}#PKA()
+    pka_category_skus         = PKA()
 
     # удаляем все записи в таблице Sku
     db.session.query(Sku).delete()
