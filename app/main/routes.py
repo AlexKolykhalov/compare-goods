@@ -1,7 +1,7 @@
 from app        import db
 from app.main   import bp
 from app.models import Sku, News
-from app.parcer import get_catalog, html_creator, main_search, get_news, connecton_check #(remove main_search)
+from app.parcer import get_catalog, html_creator
 
 from flask      import render_template, request, url_for
 

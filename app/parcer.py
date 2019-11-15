@@ -1,5 +1,5 @@
 from app        import redis_store, db
-from app.models import Sku, News #Lenta, Perekrestok, Pka
+from app.models import Sku, News
 
 from fuzzywuzzy import fuzz
 from threading  import Thread
@@ -99,7 +99,7 @@ def PEREKRESTOK():
                                 'weight': weight,
                                 'type': '(PEREKRESTOK)',
                                 'indicator': 0, # индикатор, кот. показывает есть ли товар в списке похожих товаров
-                                'favicon': 'https://www.perekrestok.ru/favicon.ico'} # << -- подумать над мерой измерения            
+                                'favicon': 'https://www.perekrestok.ru/favicon.ico'}
             if category in perekrestok_category_skus.keys():
                 perekrestok_category_skus[category].append(perekrestok_skus)
             else:
@@ -185,13 +185,13 @@ def PKA(): # если разбить категории на подкатего�
                         pka_skus = {'name': name,
                                     'img': skus['img_link'],
                                     'href': 'https://5ka.ru/special_offers/'+str(skus['id']),
-                                    'new_price': skus['current_prices']['price_promo__min'], #format(float(skus['current_prices']['price_promo__min']), 2),
-                                    'old_price': skus['current_prices']['price_reg__min'],   #format(float(skus['current_prices']['price_reg__min']), 2),
+                                    'new_price': skus['current_prices']['price_promo__min'],
+                                    'old_price': skus['current_prices']['price_reg__min'],
                                     'discount': round((skus['current_prices']['price_reg__min']-skus['current_prices']['price_promo__min'])/skus['current_prices']['price_reg__min']*100),
                                     'weight': weight,
                                     'type': '(5KA)',
                                     'indicator': 0, # индикатор, кот. показывает есть ли товар в списке похожих товаров
-                                    'favicon': 'https://5ka.ru/img/icons/favicon-32x32.png'} # << -- подумать над мерой измерения 
+                                    'favicon': 'https://5ka.ru/img/icons/favicon-32x32.png'}
                         pka_category_skus[category].append(pka_skus)
                         k += 1                    
                     url = get['next']
@@ -286,8 +286,8 @@ def LENTA():
                         lenta_skus = {'name': name,
                                       'img': skus['imageUrl'] if skus['imageUrl'] else 'https://lenta.gcdn.co/static/pics/image-default--thumb.305ca150c22262acb4c40de317e93d1a.png',
                                       'href': 'https://lenta.com'+skus['skuUrl'],
-                                      'new_price': skus['cardPrice']['value'],    # "{:.2f}".format(float(skus['cardPrice']['value'])),
-                                      'old_price': skus['regularPrice']['value'], # "{:.2f}".format(float(skus['regularPrice']['value'])),
+                                      'new_price': skus['cardPrice']['value'],
+                                      'old_price': skus['regularPrice']['value'],
                                       'discount': skus['promoPercent'],
                                       'weight': weight,
                                       'type': '(LENTA)',
@@ -553,29 +553,6 @@ def costruct_name(name):
     
     return ' '.join(costruct_name.split())
 
-def connecton_check(): ## DELETE
-    
-    # headers = {
-    #     'Host': '5ka.ru',
-    #     'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:70.0) Gecko/20100101 Firefox/70.0',
-    #     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-    #     'Accept-Language': 'ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3',
-    #     'Accept-Encoding': 'gzip, deflate, br',
-    #     'Referer': 'https://yandex.ru/',
-    #     'DNT': '1',
-    #     'Connection': 'keep-alive',
-    #     'Cookie': 'header_name=X-Authorization; _gcl_au=1.1.279000607.1573634911; location_id=1814; token=Tokenb21890fea317d0054666e31ff55e55dc13324bc8',
-    #     'Upgrade-Insecure-Requests': '0',
-    #     'If-Modified-Since': 'Mon, 28 Oct 2019 12:17:35 GMT',
-    #     'If-None-Match': 'W/"5db6dc',
-    #     'Cache-Control': 'max-age=0',
-    # }    
-    try:
-        r = requests.get('https://5ka.ru/', timeout=25)
-        print(r.text)
-    except requests.exceptions.ConnectTimeout:
-        print('-----> TOO SLOW')
-
 # варианты сортировок
 def by_discount(elem):
     return elem['discount']
@@ -730,8 +707,7 @@ def main_search():
     # удаляем все записи в таблице Sku
     db.session.query(Sku).delete()
     db.session.commit()
-
-    # # async
+    
     beg             = dt.now()
     _all            = 0 # общее число внесенных товаров
     _total          = 0 # общее число товаров
@@ -747,14 +723,10 @@ def main_search():
             perekrestok = perekrestok_category_skus[category]
         if category in pka_category_skus.keys():
             pka = pka_category_skus[category]
-                
         print('Объдиняем категорию:', category)
-        
         start = dt.now()
-        
-        # s = dt.now()
-        k   = 0
-        _in = 0
+        k   = 0 # для смещения по базам товаров
+        _in = 0 # число одинаковых товаров
         arrays = [lenta, perekrestok, pka]
         for arr1 in arrays:
             k += 1
@@ -810,48 +782,7 @@ def main_search():
                 db.session.add(sku)
                 db.session.commit()
         
-        category_number += 1
-        
-        # f = dt.now()
-        # print('-----------------------------------------------------')
-        # print('Общее время выполнения 1 алгоритма: '+str(f-s)+' сек.')
-        # print('-----------------------------------------------------')
-        
-        
-        # s = dt.now()
-        # k   = 0
-        # _in = 0
-        # arrays = [lenta, perekrestok, pka]
-        # for arr1 in arrays:
-        #     k += 1
-        #     for arr2 in arrays[k:len(arrays)]:
-        #         for elem1 in arr1:
-        #             index_token_set_ratio = 0
-        #             for elem2 in arr2:
-        #                 # сравнение элементов на схожесть
-        #                 if elem1['weight'] != elem2['weight']:
-        #                     continue
-        #                 token_set_ratio = fuzz.token_set_ratio(elem1['name'], elem2['name'])
-        #                 if token_set_ratio > index_token_set_ratio:
-        #                     index_token_set_ratio = token_set_ratio
-        #                     goods_token_set_ratio = elem2['name']
-        #                     type_token_set_ratio  = elem2['type']
-        #                     if token_set_ratio == 100:
-        #                         break
-        #             if index_token_set_ratio == 100:   # фильтр на попадание в массив похожих товаров
-        #                 print('<<<<<', elem1['name'], elem1['type'], '   ',goods_token_set_ratio, type_token_set_ratio,' (token set ratio: ', index_token_set_ratio,')', sep='')
-        #                 _in  += 1
-        #                 _all += 1
-        #             elif index_token_set_ratio == 0:
-        #                 pass
-        #                 # print(elem1['name'], elem1['type'], index_token_set_ratio)
-        #             else:
-        #                 pass
-        #                 # print(elem1['name'], elem1['type'], goods_token_set_ratio+' '+type_token_set_ratio+' (token set ratio: '+str(index_token_set_ratio)+')')
-        # f = dt.now()
-        # print('-----------------------------------------------------')
-        # print('Общее время выполнения 2 алгоритма: '+str(f-s)+' сек.')
-        # print('-----------------------------------------------------')
+        category_number += 1        
         finish = dt.now()
         print('')
         print('----Время анализа кат. '+category+' составило: '+ str(finish-start)+' сек.----')
@@ -861,6 +792,3 @@ def main_search():
     print('Общее время выполнения: '+str(end-beg)+' сек.')
     print('Всего внесено: '+str(_all))
     print('Общее количество товара: '+str(_total))
-    
-    # for category_num in ['1', '2', '3', '4', '5', '6', '7', '8']:
-    #     Thread(target=comparison, args=(category_num, pka_category_skus, lenta_category_skus)).start()    
