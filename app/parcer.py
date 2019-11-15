@@ -617,54 +617,54 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
         if sort_method == 'null':
             if category_number:
                 if checked:
-                    sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_category==category_number, Sku.sku_twin==True).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
+                    sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_category==category_number, Sku.sku_twin==True).order_by(desc(Sku.sku_discount_desc), Sku.sku_name).offset(offset).limit(13).all()
                 else:
-                    sorted_products = db.session.query(Sku.sku_html_1).filter_by(sku_category=category_number).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
+                    sorted_products = db.session.query(Sku.sku_html_1).filter_by(sku_category=category_number).order_by(desc(Sku.sku_discount_desc), Sku.sku_name).offset(offset).limit(13).all()
             else:
                 if checked:
                     if search_text:
-                        sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_twin==True, Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_twin==True, Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_discount_desc), Sku.sku_name).offset(offset).limit(13).all()
                     else:                        
-                        sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_twin==True).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_twin==True).order_by(desc(Sku.sku_discount_desc), Sku.sku_name).offset(offset).limit(13).all()
                 else:
                     if search_text:
-                        sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_discount_desc), Sku.sku_name).offset(offset).limit(13).all()
                     else:
-                        sorted_products = db.session.query(Sku.sku_html_1).order_by(desc(Sku.sku_discount_desc)).offset(offset).limit(13).all()        
+                        sorted_products = db.session.query(Sku.sku_html_1).order_by(desc(Sku.sku_discount_desc), Sku.sku_name).offset(offset).limit(13).all()        
         elif sort_method == 'asc':
             if category_number:
                 if checked:
-                    sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_category==category_number, Sku.sku_twin==True).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
+                    sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_category==category_number, Sku.sku_twin==True).order_by(Sku.sku_price_asc, Sku.sku_name).offset(offset).limit(13).all()
                 else:
-                    sorted_products = db.session.query(Sku.sku_html_2).filter_by(sku_category=category_number).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
+                    sorted_products = db.session.query(Sku.sku_html_2).filter_by(sku_category=category_number).order_by(Sku.sku_price_asc, Sku.sku_name).offset(offset).limit(13).all()
             else:
                 if checked:
                     if search_text:
-                        sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_twin==True, Sku.sku_lowercase.like(search_text)).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_twin==True, Sku.sku_lowercase.like(search_text)).order_by(Sku.sku_price_asc, Sku.sku_name).offset(offset).limit(13).all()
                     else:
-                        sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_twin==True).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_twin==True).order_by(Sku.sku_price_asc, Sku.sku_name).offset(offset).limit(13).all()
                 else:
                     if search_text:
-                        sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_lowercase.like(search_text)).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_lowercase.like(search_text)).order_by(Sku.sku_price_asc, Sku.sku_name).offset(offset).limit(13).all()
                     else:
-                        sorted_products = db.session.query(Sku.sku_html_2).order_by(Sku.sku_price_asc).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_2).order_by(Sku.sku_price_asc, Sku.sku_name).offset(offset).limit(13).all()
         elif sort_method == 'desc':
             if category_number:
                 if checked:
-                    sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_category==category_number, Sku.sku_twin==True).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
+                    sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_category==category_number, Sku.sku_twin==True).order_by(desc(Sku.sku_price_desc), Sku.sku_name).offset(offset).limit(13).all()
                 else:
-                    sorted_products = db.session.query(Sku.sku_html_3).filter_by(sku_category=category_number).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
+                    sorted_products = db.session.query(Sku.sku_html_3).filter_by(sku_category=category_number).order_by(desc(Sku.sku_price_desc), Sku.sku_name).offset(offset).limit(13).all()
             else:
                 if checked:
                     if search_text:
-                        sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_twin==True, Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_twin==True, Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_price_desc), Sku.sku_name).offset(offset).limit(13).all()
                     else:
-                        sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_twin==True).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_twin==True).order_by(desc(Sku.sku_price_desc), Sku.sku_name).offset(offset).limit(13).all()
                 else:
                     if search_text:
-                        sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_price_desc), Sku.sku_name).offset(offset).limit(13).all()
                     else:
-                        sorted_products = db.session.query(Sku.sku_html_3).order_by(desc(Sku.sku_price_desc)).offset(offset).limit(13).all()
+                        sorted_products = db.session.query(Sku.sku_html_3).order_by(desc(Sku.sku_price_desc), Sku.sku_name).offset(offset).limit(13).all()
     
     html_text_carousel_indicators, html_text_carousel_inner, html_text, group_of_products = '', '', '', ''
     indexes = [i for i in range(products_per_row-1, count_of_products, products_per_row)] # получаем индексы, кот. помогают разбивать товары для слайда/строки
@@ -702,7 +702,7 @@ def main_search():
     get_news()
     lenta_category_skus       = LENTA()
     perekrestok_category_skus = PEREKRESTOK()
-    pka_category_skus         = PKA()
+    pka_category_skus         = {}#PKA()
 
     # удаляем все записи в таблице Sku
     db.session.query(Sku).delete()
