@@ -59,7 +59,7 @@
                                                         category_number: _category_number})
                 .done(function(response) {
                     if (response['html_text'] != '') {
-                        $('#html_text').html($('#html_text').html()+response['html_text']);
+                        $('#html_text').append(response['html_text']);
                         _offset.text(+_offset.text()+12);
                     }
                     if (response['show_load_button']) {
