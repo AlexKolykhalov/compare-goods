@@ -1,4 +1,5 @@
 from app        import db
+# from app        import index_algoliasearch
 from app.main   import bp
 from app.models import Sku, News
 from app.parcer import get_catalog, html_creator
@@ -95,11 +96,12 @@ def add_loading():
 
 #ajax
 @bp.route('/products_search')
-def products_search():
+def products_search():    
+    # # -------for algolia-------------
+    # search_text = request.args.get('search_text')
+    # search_result = index_algoliasearch.search(search_text)
+    # -------for postgresql----------    
     search_text = request.args.get('search_text').lower()
-    # --------------------
-    #
-    # --------------------
     result = 'Ничего не найдено'
     products = ''
     categories = ''

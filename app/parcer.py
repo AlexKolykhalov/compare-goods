@@ -1,4 +1,5 @@
-from app        import redis_store, db
+from app        import db
+# from app        import index_algoliasearch
 from app.models import Sku, News
 
 from fuzzywuzzy import fuzz
@@ -698,7 +699,7 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
     
     return {'carousel_indicators': html_text_carousel_indicators, 'carousel_inner': html_text_carousel_inner, 'html_text': html_text, 'show_load_button': show_load_button}
 
-def main_search():    
+def main_search():
     get_news()
     lenta_category_skus       = LENTA()
     perekrestok_category_skus = PEREKRESTOK()
@@ -709,7 +710,7 @@ def main_search():
     db.session.commit()
     
     beg             = dt.now()
-    _all            = 0 # общее число внесенных товаров
+    _all            = 0 # общее число одинаковых товаров
     _total          = 0 # общее число товаров
     category_number = 0 # счетчик для нумерования категорий товара
     
@@ -726,7 +727,7 @@ def main_search():
         print('Объдиняем категорию:', category)
         start = dt.now()
         k   = 0 # для смещения по базам товаров
-        _in = 0 # число одинаковых товаров
+        _in = 0 # число одинаковых товаров в категории
         arrays = [lenta, perekrestok, pka]
         for arr1 in arrays:
             k += 1
@@ -754,9 +755,13 @@ def main_search():
                         elem2['indicator'] = 1 # elem2 внесен в похожие товары, вносить его еще раз в массив product не имеет смысла
                         product.append(elem2)
                         print('<<<<<', elem1['name'], elem1['type'], '   ',goods_token_set_ratio, type_token_set_ratio,' (token set ratio: ', index_token_set_ratio,')', sep='')
-                        _in  += 1
-                        _all += 1
+                        _in  += 1 # число одинаковых товаров в категории
+                        _all += 1 # общее число одинаковых товаров
                 
+                # #algoliasearch
+                # index_algoliasearch.save_object({'objectID': _total, 'product': product})
+                
+                #create a sku in database
                 index = ''.join(choices(ascii_uppercase + ascii_lowercase + digits, k=12)) # получаем случайный индекс
 
                 sku_discount_desc = sorted(product, key=by_discount, reverse=True) # макс скидка

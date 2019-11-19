@@ -1,10 +1,11 @@
-from flask            import Flask
-from config           import Config
-from flask_bootstrap  import Bootstrap
-from flask_mail       import Mail
-from flask_redis      import FlaskRedis
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate    import Migrate
+from flask                          import Flask
+from config                         import Config
+from flask_bootstrap                import Bootstrap
+from flask_mail                     import Mail
+from flask_redis                    import FlaskRedis
+from flask_sqlalchemy               import SQLAlchemy
+from flask_migrate                  import Migrate
+# from algoliasearch.search_client    import SearchClient
 # from flask_login        import LoginManager
 # from flask_uploads      import UploadSet, IMAGES, configure_uploads
 
@@ -18,6 +19,8 @@ mail                                            = Mail()
 redis_store                                     = FlaskRedis()
 db                                              = SQLAlchemy()
 migrate                                         = Migrate()
+# algoliasearch                                   = SearchClient.create(Config.ALGOLIASEARCH_APP_ID, Config.ALGOLIASEARCH_API_KEY)
+# index_algoliasearch                             = algoliasearch.init_index('_algoliaSearch')
 # images                                          = UploadSet('images', IMAGES)
 # login_manager                                   = LoginManager()
 # login_manager.login_view                        = 'auth.login'

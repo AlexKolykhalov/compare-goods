@@ -3,12 +3,16 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config(object):  
-    # db SQLLite
+    # db Postgresql
     SQLALCHEMY_DATABASE_URI        = os.environ.get('DATABASE_URL') or 'postgresql:///db_products'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # redis ???   
     # REDIS_URL = os.environ.get('REDIS_URL') or 'redis://localhost:6379/1'
+
+    # #algoliasearch
+    # ALGOLIASEARCH_APP_ID  = os.environ.get('ALGOLIASEARCH_APP_ID')
+    # ALGOLIASEARCH_API_KEY = os.environ.get('ALGOLIASEARCH_API_KEY')
 
     # mail
     MAIL_SERVER   = 'smtp.rambler.ru'   
