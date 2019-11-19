@@ -30,10 +30,13 @@ h4 {
 	font-size: 18px;	
 }
 .btn-info {
-	border-radius: 20px;	
-	font-size: 20px;	
+	border-radius: 20px;
+	font-size: 20px;
 	margin-bottom: 50px;
 	box-shadow: 0 2px 6px 0 rgba(0,0,0,0.15);
+}
+.btn-info:focus {
+	outline: none;	
 }
 .back-to-top {	
 	cursor: pointer;
