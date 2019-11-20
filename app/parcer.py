@@ -150,7 +150,10 @@ def PKA(): # если разбить категории на подкатего�
     kwargs = {'domain': '5ka.ru'}
     cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
     session.cookies.set_cookie(cookie)
-    special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=').json()
+    try:
+        special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=', timeout=25).json()
+    except (son.decoder.JSONDecodeError, requests.exceptions.ConnectTimeout):
+        print('--->  https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=, special_offers FAILED')
     if len(special_offers['results']) == 0:
         return pka_category_skus
     try:
