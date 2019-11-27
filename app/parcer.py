@@ -158,7 +158,7 @@ def PKA(): # если разбить категории на подкатего�
         return pka_category_skus
     try:
         groups = session.get('https://5ka.ru/api/v2/categories/', timeout=25).json()
-    except (json.decoder.JSONDecodeError, requests.exceptions.ConnectTimeout):
+    except (json.decoder.JSONDecodeError, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout):
         print('--->  https://5ka.ru/api/v2/categories/, group FAILED')
         return pka_category_skus    
     for group in groups:
