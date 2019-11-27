@@ -152,7 +152,7 @@ def PKA(): # если разбить категории на подкатего�
     session.cookies.set_cookie(cookie)
     try:
         special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=', timeout=25).json()
-    except (json.decoder.JSONDecodeError, requests.exceptions.ConnectTimeout):
+    except (json.decoder.JSONDecodeError, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout):
         print('--->  https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=, special_offers FAILED')
     if len(special_offers['results']) == 0:
         return pka_category_skus
@@ -796,6 +796,8 @@ def main_search():
         print('----Время анализа кат. '+category+' составило: '+ str(finish-start)+' сек.----')
         print('----Внесено: '+str(_in)+'----')
         print('')
+    # фиксируем дату обновления данных
+
     end = dt.now()
     print('Общее время выполнения: '+str(end-beg)+' сек.')
     print('Всего внесено: '+str(_all))
