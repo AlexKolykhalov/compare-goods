@@ -338,7 +338,7 @@ def get_news():
     print('Lenta news done.')
     #perekrestok    
     with requests.Session() as s:
-        page = session.get('https://www.perekrestok.ru/promos')
+        page = s.get('https://www.perekrestok.ru/promos')
         perekrestok_news_content = BeautifulSoup(page.content, 'html.parser').find_all('li', {'class': 'xf-promo__item'})
         for news_content in perekrestok_news_content:
             news_href              = news_content.find('a')['href']
