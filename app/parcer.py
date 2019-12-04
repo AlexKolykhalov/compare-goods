@@ -378,10 +378,10 @@ def get_news():
         'If-Modified-Since': 'Mon, 25 Nov 2019 15:47:29 GMT'
     }
     try:
-        session.get('https://5ka.ru', timeout=25)
-        kwargs = {'domain': '5ka.ru'}
-        cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
-        session.cookies.set_cookie(cookie)
+        # session.get('https://5ka.ru', timeout=25)
+        # kwargs = {'domain': '5ka.ru'}
+        # cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
+        # session.cookies.set_cookie(cookie)
         pka_news_content = session.get('https://5ka.ru/api/news/', timeout=25).json()
         pka_news_array   = pka_news_content['results'][:4]
         for news_content in pka_news_array:
