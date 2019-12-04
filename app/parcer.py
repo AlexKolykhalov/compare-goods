@@ -383,7 +383,7 @@ def get_news():
         cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
         session.cookies.set_cookie(cookie)
         pka_news_content = session.get('https://5ka.ru/api/news/', timeout=25)
-        print(pka_news_content)
+        print(pka_news_content.text)
         pka_news_content = session.get('https://5ka.ru/api/news/', timeout=25).json()
         pka_news_array   = pka_news_content['results'][:4]
         for news_content in pka_news_array:
