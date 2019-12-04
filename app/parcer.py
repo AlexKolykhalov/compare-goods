@@ -313,26 +313,24 @@ def get_news():
     news_perekrestok = ''
     news_pka         = ''
     print('In get_news.')
-    # #lenta
-    # session = requests.Session()
-    # session.headers = {'Accept': 'application/json',                
-    #                    'Content-Type': 'application/json',                
-    #                    'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0'}
-
-    # for name, value in [('CityCookie', 'lpc'), ('lentaT2', 'lpc'), ('Store', '0148')]:    
-    #     kwargs = {'domain': 'lenta.com'}
-    #     cookie = requests.cookies.create_cookie(name, value, **kwargs)
-    #     session.cookies.set_cookie(cookie)
-
+    #lenta
     session = requests.Session()
-    page = session.get('https://lenta.com/goods-actions/')    
+    session.headers = {'Accept': 'application/json',                
+                       'Content-Type': 'application/json',                
+                       'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0'}
+
+    for name, value in [('CityCookie', 'lpc'), ('lentaT2', 'lpc'), ('Store', '0148')]:    
+        kwargs = {'domain': 'lenta.com'}
+        cookie = requests.cookies.create_cookie(name, value, **kwargs)
+        session.cookies.set_cookie(cookie)
+   
     print('Headers L:')
     print('>>>',session.headers.items())
     print('Cookies L:')
-    print('>>>',session.cookies.items())
-    print(page.text)
+    print('>>>',session.cookies.items())    
 
-    # page = session.get('https://lenta.com/goods-actions/')    
+    page = session.get('https://lenta.com/goods-actions/')    
+    print(page.text)
     # lenta_news_content = BeautifulSoup(page.content, 'html.parser').find_all('div', {'class': 'news-item__content'})
     # for news_content in lenta_news_content:        
     #     news_date = news_content.find('div', {'class': 'news-item__date'}).text.replace('\r\n', '').replace(' ', '')
