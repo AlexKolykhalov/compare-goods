@@ -1,5 +1,5 @@
 from app                             import create_app
-from app.parcer                      import main_search
+from app.parcer                      import main_search, get_news
 
 from flask                           import current_app
 from datetime                        import datetime as dt
@@ -16,7 +16,8 @@ def timed_job():
     requests.get('https://compare-goods.herokuapp.com/')    
     app = create_app()
     with app.app_context():
-        main_search()
+        get_news()
+        # main_search()
     end = dt.now()
     print('------> Job done at:', end)
 
