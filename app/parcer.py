@@ -336,29 +336,47 @@ def get_news():
             news_html        = '<hr><b>'+news_title+'</b><br>'+news_description+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
             news_lenta       = news_lenta + news_html
     print('Lenta news done.')
-    #perekrestok    
-    with requests.Session() as s:
-        page = s.get('https://www.perekrestok.ru/promos')
-        perekrestok_news_content = BeautifulSoup(page.content, 'html.parser').find_all('li', {'class': 'xf-promo__item'})
-        for news_content in perekrestok_news_content:
-            news_href              = news_content.find('a')['href']
-            page_news              = s.get(news_href)        
-            page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
-            news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'    
-        print('Perekrestok news done.')    
-    # session = requests.Session()
-    # cookie = requests.cookies.create_cookie('region', '16')
-    # session.cookies.set_cookie(cookie)
-    # page = session.get('https://www.perekrestok.ru/promos')
-    # perekrestok_news_content = BeautifulSoup(page.content, 'html.parser').find_all('li', {'class': 'xf-promo__item'})
-    # for news_content in perekrestok_news_content:
-    #     news_href              = news_content.find('a')['href']
-    #     page_news              = session.get(news_href)        
-    #     page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
-    #     news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'    
-    # print('Perekrestok news done.')
+    # #perekrestok    
+    # with requests.Session() as s:
+    #     # s.headers = {}
+    #     page = s.get('https://www.perekrestok.ru/promos')
+    #     perekrestok_news_content = BeautifulSoup(page.content, 'html.parser').find_all('li', {'class': 'xf-promo__item'})
+    #     for news_content in perekrestok_news_content:
+    #         news_href              = news_content.find('a')['href']
+    #         page_news              = s.get(news_href)        
+    #         page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
+    #         news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'    
+    #     print('Perekrestok news done.')    
+    # # session = requests.Session()
+    # # cookie = requests.cookies.create_cookie('region', '16')
+    # # session.cookies.set_cookie(cookie)
+    # # page = session.get('https://www.perekrestok.ru/promos')
+    # # perekrestok_news_content = BeautifulSoup(page.content, 'html.parser').find_all('li', {'class': 'xf-promo__item'})
+    # # for news_content in perekrestok_news_content:
+    # #     news_href              = news_content.find('a')['href']
+    # #     page_news              = session.get(news_href)        
+    # #     page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
+    # #     news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'    
+    # # print('Perekrestok news done.')
     #pka
     session = requests.Session()
+    session.headers = {
+        'Host': '5ka.ru',
+        'Connection': 'keep-alive',
+        'Cache-Control': 'max-age=0',
+        'Upgrade-Insecure-Requests': '1',
+        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
+        'Sec-Fetch-User': '?1',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
+        'Sec-Fetch-Site': 'same-origin',
+        'Sec-Fetch-Mode': 'navigate',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cookie': 'header_name=X-Authorization; _ym_uid=1574167458530022775; _ym_d=1574167458; _gcl_au=1.1.1434234221.1574167459; _ga=GA1.2.1782387678.1574167460; location_id=1871; token=Tokenb95a4ff300063da22317467c7babd8b1375685f0; location_id=1871; TS01658276=01a93f7547cfa9c2f66ad5f5cad135006cbccb428d34c2f228190ce11574ec68f47179de4a4dfbf194f8d634d272c56f6fc96a6fefb1cd88f4cbe535f0090c122c918e0762',
+        'dnt': '1',
+        'If-None-Match': 'W/"5ddbf791-a3c"',
+        'If-Modified-Since': 'Mon, 25 Nov 2019 15:47:29 GMT'
+    }
     try:
         session.get('https://5ka.ru', timeout=25)
         kwargs = {'domain': '5ka.ru'}
