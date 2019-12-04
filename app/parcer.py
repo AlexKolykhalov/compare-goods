@@ -324,18 +324,23 @@ def get_news():
         cookie = requests.cookies.create_cookie(name, value, **kwargs)
         session.cookies.set_cookie(cookie)
 
-    page = session.get('https://lenta.com/goods-actions/')    
-    lenta_news_content = BeautifulSoup(page.content, 'html.parser').find_all('div', {'class': 'news-item__content'})
-    for news_content in lenta_news_content:        
-        news_date = news_content.find('div', {'class': 'news-item__date'}).text.replace('\r\n', '').replace(' ', '')
-        today = dt.today().strftime('%d.%m.%Y')        
-        if news_date == today:
-            news_title       = news_content.find('h3', {'class': 'news-item__title'}).text.replace('\r\n', '').strip()
-            news_description = news_content.find('div', {'class': 'news-item__description'}).text.replace('\r\n', '').strip()
-            news_href        = news_content.find('div', {'class': 'news-item__more'}).find('a', {'class': 'link'})['href']
-            news_html        = '<hr><b>'+news_title+'</b><br>'+news_description+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
-            news_lenta       = news_lenta + news_html
-    print('Lenta news done.')
+    print('Headers L:')
+    print('>>>',session.headers.items())
+    print('Cookies L:')
+    print('>>>',session.cookies.items())
+
+    # page = session.get('https://lenta.com/goods-actions/')    
+    # lenta_news_content = BeautifulSoup(page.content, 'html.parser').find_all('div', {'class': 'news-item__content'})
+    # for news_content in lenta_news_content:        
+    #     news_date = news_content.find('div', {'class': 'news-item__date'}).text.replace('\r\n', '').replace(' ', '')
+    #     today = dt.today().strftime('%d.%m.%Y')        
+    #     if news_date == today:
+    #         news_title       = news_content.find('h3', {'class': 'news-item__title'}).text.replace('\r\n', '').strip()
+    #         news_description = news_content.find('div', {'class': 'news-item__description'}).text.replace('\r\n', '').strip()
+    #         news_href        = news_content.find('div', {'class': 'news-item__more'}).find('a', {'class': 'link'})['href']
+    #         news_html        = '<hr><b>'+news_title+'</b><br>'+news_description+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
+    #         news_lenta       = news_lenta + news_html
+    # print('Lenta news done.')
     # #perekrestok    
     # with requests.Session() as s:
     #     # s.headers = {}
@@ -385,10 +390,11 @@ def get_news():
         print('Headers:')
         print('>>>',session.headers.items())
         print('Cookies:')
-        print('>>>',session.cookies.items())        
+        print('>>>',session.cookies.items())
+        
         
         pka_news_content = session.get('https://5ka.ru/api/news/', timeout=25)
-        session.cookies.clear()
+        # session.cookies.clear()
         print(pka_news_content.text)
         pka_news_content = session.get('https://5ka.ru/api/news/', timeout=25).json()
         pka_news_array   = pka_news_content['results'][:4]
