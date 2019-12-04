@@ -385,11 +385,6 @@ def get_news():
     }
     try:        
         # session.get('https://5ka.ru', timeout=25)
-        for name, value in [('CityCookie', 'lpc'), ('lentaT2', 'lpc'), ('Store', '0148')]:    
-            kwargs = {'domain': 'lenta.com'}
-            cookie = requests.cookies.create_cookie(name, value, **kwargs)
-            session.cookies.set_cookie(cookie)
-
         for name, value in [('header_name', 'X-Authorization'),
                             ('token', 'Tokenb95a4ff300063da22317467c7babd8b1375685f0'),
                             ('location_id', '1871'), 
