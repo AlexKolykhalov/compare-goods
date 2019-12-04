@@ -13,7 +13,7 @@ sched = BlockingScheduler()
 def timed_job():
     start = dt.now()
     print('------> Job start at:', start)
-    requests.get('https://compare-goods.herokuapp.com/')    
+    # requests.get('https://compare-goods.herokuapp.com/')    
     app = create_app()
     with app.app_context():
         get_news()
