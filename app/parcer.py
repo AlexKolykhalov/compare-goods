@@ -325,11 +325,12 @@ def get_news():
     #     session.cookies.set_cookie(cookie)
 
     session = requests.Session()
-    page = session.get('https://lenta.com/goods-actions/')
+    page = session.get('https://lenta.com/goods-actions/')    
     print('Headers L:')
     print('>>>',session.headers.items())
     print('Cookies L:')
     print('>>>',session.cookies.items())
+    print(page.text)
 
     # page = session.get('https://lenta.com/goods-actions/')    
     # lenta_news_content = BeautifulSoup(page.content, 'html.parser').find_all('div', {'class': 'news-item__content'})
