@@ -397,7 +397,7 @@ def get_news():
     #     'If-Modified-Since': 'Mon, 25 Nov 2019 15:47:29 GMT'
     # }
     try:        
-        session.get('https://5ka.ru', timeout=25)
+        # session.get('https://5ka.ru', timeout=25)
         for name, value in [('header_name', 'X-Authorization'),
                             ('_ym_uid', '1574167458530022775'),
                             ('_ym_d', '1574167458'),
