@@ -382,8 +382,11 @@ def get_news():
         # kwargs = {'domain': '.5ka.ru'}
         # cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
         # session.cookies.set_cookie(cookie)        
-        print('Cookies: ')
-        print(session.cookies.items())        
+        print('Headers:')
+        print('>>>',session.headers.items())
+        print('Cookies:')
+        print('>>>',session.cookies.items())        
+        
         pka_news_content = session.get('https://5ka.ru/api/news/', timeout=25)
         session.cookies.clear()
         print(pka_news_content.text)
