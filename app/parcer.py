@@ -68,7 +68,11 @@ def PEREKRESTOK():
     perekrestok_category_skus = {}    
     while True:
         url = 'https://www.perekrestok.ru/assortment?page='+str(num_page)+'&sort=rate_desc'
-        page = session.get(url)
+        try:
+            page = session.get(url)
+        except requests.exceptions.ConnectionError:
+            print('--->', url, 'FAILED <<ConnectionError>>')            
+            break
         products = BeautifulSoup(page.content, 'html.parser').find_all('div', {'class': ['xf-product js-product _not-online', 'xf-product js-product _not-active _not-online']})
         if len(products) == 0:
             break
