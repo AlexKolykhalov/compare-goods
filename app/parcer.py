@@ -323,11 +323,6 @@ def get_news():
         kwargs = {'domain': 'lenta.com'}
         cookie = requests.cookies.create_cookie(name, value, **kwargs)
         session.cookies.set_cookie(cookie)
-   
-    print('Headers L:')
-    print('>>>',session.headers.items())
-    print('Cookies L:')
-    print('>>>',session.cookies.items())    
 
     page = session.get('https://lenta.com/goods-actions/')        
     lenta_news_content = BeautifulSoup(page.content, 'html.parser').find_all('div', {'class': 'news-item__content'})
@@ -341,123 +336,62 @@ def get_news():
             news_html        = '<hr><b>'+news_title+'</b><br>'+news_description+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
             news_lenta       = news_lenta + news_html
     print('Lenta news done.')
-    #perekrestok    
-    with requests.Session() as s:
-        page = session.get('https://www.perekrestok.ru/promos')
-        perekrestok_news_content = BeautifulSoup(page.content, 'html.parser').find_all('li', {'class': 'xf-promo__item'})
-        for news_content in perekrestok_news_content:
-            news_href              = news_content.find('a')['href']
-            page_news              = s.get(news_href)        
-            page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
-            news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'    
-        print('Perekrestok news done.')    
-    # session = requests.Session()
-    # cookie = requests.cookies.create_cookie('region', '16')
-    # session.cookies.set_cookie(cookie)
-    # page = session.get('https://www.perekrestok.ru/promos')
-    # perekrestok_news_content = BeautifulSoup(page.content, 'html.parser').find_all('li', {'class': 'xf-promo__item'})
-    # for news_content in perekrestok_news_content:
-    #     news_href              = news_content.find('a')['href']
-    #     page_news              = session.get(news_href)        
-    #     page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
-    #     news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'    
-    # print('Perekrestok news done.')
+    #perekrestok
+    session = requests.Session()
+    cookie = requests.cookies.create_cookie('region', '16')
+    session.cookies.set_cookie(cookie)
+    page = session.get('https://www.perekrestok.ru/promos')
+    perekrestok_news_content = BeautifulSoup(page.content, 'html.parser').find_all('li', {'class': 'xf-promo__item'})
+    for news_content in perekrestok_news_content:
+        news_href              = news_content.find('a')['href']
+        page_news              = session.get(news_href)        
+        page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
+        news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'    
+    print('Perekrestok news done.')
     #pka
     session = requests.Session()
-    
-    session.headers = {'Host': '5ka.ru',
-    'Connection': 'keep-alive',
-    'Accept': 'application/json, text/plain, */*',
-    'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/78.0.3904.108 Safari/537.36',
-    'Sec-Fetch-Site': 'same-origin',
-    'Sec-Fetch-Mode': 'cors',
-    'Referer': 'https://5ka.ru/',
-    'Accept-Encoding': 'gzip, deflate, br',
-    'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-    'Cookie': 'header_name=X-Authorization; _ym_uid=1574167458530022775; _ym_d=1574167458; _gcl_au=1.1.1434234221.1574167459; _ga=GA1.2.1782387678.1574167460; location_id=1871; token=Tokenb95a4ff300063da22317467c7babd8b1375685f0; location_id=1871; TS01658276=01a93f7547edffda3389cab4d2d507ded9bd5baae945f60a43ba37c56d7426db2852d2735bed82aa432fc35fcb06fa44e667e9494dff41fcf08399491fdb75ee95cf3307d2',
-    'dnt': '1'}
-    
-    # session.headers = {
-    #     'Host': '5ka.ru',
-    #     'Connection': 'keep-alive',
-    #     'Content-Type': 'application/json',
-    #     'Cache-Control': 'max-age=0',
-    #     'Upgrade-Insecure-Requests': '1',
-    #     'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0',
-    #     'Sec-Fetch-User': '?1',
-    #     'Accept': 'application/json,text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3',
-    #     'Sec-Fetch-Site': 'same-origin',
-    #     'Sec-Fetch-Mode': 'navigate',
-    #     'Accept-Encoding': 'gzip, deflate, br',
-    #     'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-    #     'Cookie': 'header_name=X-Authorization; token=Tokenb95a4ff300063da22317467c7babd8b1375685f0; location_id=1871; TS01658276=01a93f7547cfa9c2f66ad5f5cad135006cbccb428d34c2f228190ce11574ec68f47179de4a4dfbf194f8d634d272c56f6fc96a6fefb1cd88f4cbe535f0090c122c918e0762',
-    #     'dnt': '1',
-    #     'If-None-Match': 'W/"5ddbf791-a3c"',
-    #     'If-Modified-Since': 'Mon, 25 Nov 2019 15:47:29 GMT'
-    # }
-    try:        
-        # session.get('https://5ka.ru', timeout=25)
-        for name, value in [('header_name', 'X-Authorization'),
-                            ('_ym_uid', '1574167458530022775'),
-                            ('_ym_d', '1574167458'),
-                            ('_gcl_au', '1.1.1434234221.1574167459'),
-                            ('_ga', 'GA1.2.1782387678.1574167460'),
-                            ('location_id', '1871'),
-                            ('token', 'Tokenb95a4ff300063da22317467c7babd8b1375685f0'),
-                            ('location_id', '1871'), 
-                            ('TS01658276', '01a93f7547edffda3389cab4d2d507ded9bd5baae945f60a43ba37c56d7426db2852d2735bed82aa432fc35fcb06fa44e667e9494dff41fcf08399491fdb75ee95cf3307d2')]:        
-            kwargs = {'domain': '.5ka.ru'}        
-            cookie = requests.cookies.create_cookie(name, value, **kwargs)
-            session.cookies.set_cookie(cookie)        
-        print('Headers:')
-        print('>>>',session.headers.items())
-        print('Cookies:')
-        print('>>>',session.cookies.items())
-        
-        
-        pka_news_content = session.get('https://5ka.ru/api/news/?records_per_page=4', timeout=25)
-        # session.cookies.clear()
-        print(pka_news_content.text)
-        # pka_news_content = session.get('https://5ka.ru/api/news/', timeout=25).json()
-        # pka_news_array   = pka_news_content['results'][:4]
-        # for news_content in pka_news_array:
-        #     news_pka = news_pka+'<hr>'+news_content['title']+'<br><a href="https://5ka.ru/news/'+str(news_content['id'])+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
-        # print('5ka news done.')
+    try:
+        pka_news_content = session.get('https://5ka.ru/api/news/', timeout=25).json()
+        pka_news_array   = pka_news_content['results'][:4]
+        for news_content in pka_news_array:
+            news_pka = news_pka+'<hr>'+news_content['title']+'<br><a href="https://5ka.ru/news/'+str(news_content['id'])+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
+        print('5ka news done.')
     except (requests.exceptions.ConnectTimeout, requests.exceptions.ConnectionError, requests.exceptions.ReadTimeout):
         news_pka = ''
         print('------> get_news, 5ka FAILED')
-
+    except:
+        print('pka_news_content = ', pka_news_content)
     
-    # news_lenta       = news_lenta if news_lenta else '<hr>На текущий момент свежих новостей нет.'
-    # news_perekrestok = news_perekrestok if news_perekrestok else '<hr>На текущий момент свежих новостей нет.'
-    # news_pka         = news_pka if news_pka else '<hr>На текущий момент свежих новостей нет.'
+    news_lenta       = news_lenta if news_lenta else '<hr>На текущий момент свежих новостей нет.'
+    news_perekrestok = news_perekrestok if news_perekrestok else '<hr>На текущий момент свежих новостей нет.'
+    news_pka         = news_pka if news_pka else '<hr>На текущий момент свежих новостей нет.'
 
-    # news_array = '''<ul class="nav nav-tabs">
-    #                     <li class="active"><a data-toggle="tab" href="#news_lenta"><img src="https://lenta.gcdn.co/static/pics/shortcuts/favicon-32x32.fb90679fd6d6da31ec7059b1cd4985e1.png"></a></li>
-    #                     <li><a data-toggle="tab" href="#news_perekrestok"><img src="https://www.perekrestok.ru/favicon.ico"></a></li>
-    #                     <li><a data-toggle="tab" href="#news_pka"><img src="https://5ka.ru/img/icons/favicon-32x32.png"></a></li>
-    #                 </ul>
-    #                 <div class="tab-content" style="margin-bottom: 20px;">
-    #                     <div id="news_lenta" class="tab-pane fade in active">
-    #                         {news_lenta}
-    #                     </div>
-    #                     <div id="news_perekrestok" class="tab-pane fade">
-    #                         {news_perekrestok}
-    #                     </div>
-    #                     <div id="news_pka" class="tab-pane fade">
-    #                         {news_pka}
-    #                     </div>
-    #                 </div>'''.format(news_lenta=news_lenta, news_perekrestok=news_perekrestok, news_pka=news_pka)    
+    news_array = '''<ul class="nav nav-tabs">
+                        <li class="active"><a data-toggle="tab" href="#news_lenta"><img src="https://lenta.gcdn.co/static/pics/shortcuts/favicon-32x32.fb90679fd6d6da31ec7059b1cd4985e1.png"></a></li>
+                        <li><a data-toggle="tab" href="#news_perekrestok"><img src="https://www.perekrestok.ru/favicon.ico"></a></li>
+                        <li><a data-toggle="tab" href="#news_pka"><img src="https://5ka.ru/img/icons/favicon-32x32.png"></a></li>
+                    </ul>
+                    <div class="tab-content" style="margin-bottom: 20px;">
+                        <div id="news_lenta" class="tab-pane fade in active">
+                            {news_lenta}
+                        </div>
+                        <div id="news_perekrestok" class="tab-pane fade">
+                            {news_perekrestok}
+                        </div>
+                        <div id="news_pka" class="tab-pane fade">
+                            {news_pka}
+                        </div>
+                    </div>'''.format(news_lenta=news_lenta, news_perekrestok=news_perekrestok, news_pka=news_pka)    
     
-    # news = db.session.query(News).get(1)
-    # if news:
-    #     news.html_news = news_array
-    #     news.date_news = dt.now()
-    # else:
-    #     news = News(html_news=news_array, date_news=dt.now())    
-    #     db.session.add(news)
+    news = db.session.query(News).get(1)
+    if news:
+        news.html_news = news_array
+        news.date_news = dt.now()
+    else:
+        news = News(html_news=news_array, date_news=dt.now())    
+        db.session.add(news)
         
-    # db.session.commit()
+    db.session.commit()
     print('News updated')
 
 def get_catalog():

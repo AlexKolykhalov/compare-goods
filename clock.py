@@ -1,5 +1,5 @@
 from app                             import create_app
-from app.parcer                      import main_search, get_news
+from app.parcer                      import main_search
 
 from flask                           import current_app
 from datetime                        import datetime as dt
@@ -13,11 +13,9 @@ sched = BlockingScheduler()
 def timed_job():
     start = dt.now()
     print('------> Job start at:', start)
-    # requests.get('https://compare-goods.herokuapp.com/')    
     app = create_app()
     with app.app_context():
-        get_news()
-        # main_search()
+        main_search()
     end = dt.now()
     print('------> Job done at:', end)
 
