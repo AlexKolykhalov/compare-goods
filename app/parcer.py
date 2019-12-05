@@ -341,28 +341,27 @@ def get_news():
             news_html        = '<hr><b>'+news_title+'</b><br>'+news_description+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
             news_lenta       = news_lenta + news_html
     print('Lenta news done.')
-    # #perekrestok    
-    # with requests.Session() as s:
-    #     # s.headers = {}
-    #     page = s.get('https://www.perekrestok.ru/promos')
-    #     perekrestok_news_content = BeautifulSoup(page.content, 'html.parser').find_all('li', {'class': 'xf-promo__item'})
-    #     for news_content in perekrestok_news_content:
-    #         news_href              = news_content.find('a')['href']
-    #         page_news              = s.get(news_href)        
-    #         page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
-    #         news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'    
-    #     print('Perekrestok news done.')    
-    # # session = requests.Session()
-    # # cookie = requests.cookies.create_cookie('region', '16')
-    # # session.cookies.set_cookie(cookie)
-    # # page = session.get('https://www.perekrestok.ru/promos')
-    # # perekrestok_news_content = BeautifulSoup(page.content, 'html.parser').find_all('li', {'class': 'xf-promo__item'})
-    # # for news_content in perekrestok_news_content:
-    # #     news_href              = news_content.find('a')['href']
-    # #     page_news              = session.get(news_href)        
-    # #     page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
-    # #     news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'    
-    # # print('Perekrestok news done.')
+    #perekrestok    
+    with requests.Session() as s:
+        page = session.get('https://www.perekrestok.ru/promos')
+        perekrestok_news_content = BeautifulSoup(page.content, 'html.parser').find_all('li', {'class': 'xf-promo__item'})
+        for news_content in perekrestok_news_content:
+            news_href              = news_content.find('a')['href']
+            page_news              = s.get(news_href)        
+            page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
+            news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'    
+        print('Perekrestok news done.')    
+    # session = requests.Session()
+    # cookie = requests.cookies.create_cookie('region', '16')
+    # session.cookies.set_cookie(cookie)
+    # page = session.get('https://www.perekrestok.ru/promos')
+    # perekrestok_news_content = BeautifulSoup(page.content, 'html.parser').find_all('li', {'class': 'xf-promo__item'})
+    # for news_content in perekrestok_news_content:
+    #     news_href              = news_content.find('a')['href']
+    #     page_news              = session.get(news_href)        
+    #     page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
+    #     news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'    
+    # print('Perekrestok news done.')
     #pka
     session = requests.Session()
     
