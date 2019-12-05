@@ -351,7 +351,10 @@ def get_news():
         print('Perekrestok news done.')
     except requests.exceptions.ConnectTimeout:
         news_perekrestok = ''
-        print('------> get_news, Perekrestok FAILED <<ConnectTimeout>>')        
+        print('------> get_news, Perekrestok FAILED <<ConnectTimeout>>')
+    except requests.exceptions.ReadTimeout:
+        news_perekrestok = ''
+        print('------> get_news, Perekrestok FAILED <<ReadTimeout>>')        
     #pka
     session = requests.Session()
     try:
@@ -369,7 +372,7 @@ def get_news():
     except requests.exceptions.ReadTimeout:
         news_pka = ''
         print('------> get_news, 5ka FAILED <<ReadTimeout>>')
-        print('pka_news_content = ', pka_news_content.text)    
+        #print('pka_news_content = ', pka_news_content.text)    
     
     news_lenta       = news_lenta if news_lenta else '<hr>На текущий момент свежих новостей нет.'
     news_perekrestok = news_perekrestok if news_perekrestok else '<hr>На текущий момент свежих новостей нет.'
