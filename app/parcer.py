@@ -356,9 +356,12 @@ def get_news():
     except requests.exceptions.ConnectTimeout:
         news_perekrestok = ''
         print('------> get_news, Perekrestok FAILED <<ConnectTimeout>>')
+    except requests.exceptions.ConnectionError:
+        news_perekrestok = ''
+        print('------> get_news, Perekrestok FAILED <<ConnectionError>>')
     except requests.exceptions.ReadTimeout:
         news_perekrestok = ''
-        print('------> get_news, Perekrestok FAILED <<ReadTimeout>>')        
+        print('------> get_news, Perekrestok FAILED <<ReadTimeout>>')
     #pka
     session = requests.Session()
     try:
