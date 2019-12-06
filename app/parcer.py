@@ -156,8 +156,18 @@ def PKA(): # если разбить категории на подкатего�
     session.cookies.set_cookie(cookie)
     try:
         special_offers = session.get('https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=', timeout=25).json()
-    except (json.decoder.JSONDecodeError, requests.exceptions.ConnectTimeout, requests.exceptions.ReadTimeout):
+    except json.decoder.JSONDecodeError:
         print('--->  https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=, special_offers FAILED')
+        print('<<JSONDecodeError>>')
+        return pka_category_skus
+    except requests.exceptions.ConnectTimeout:
+        print('--->  https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=, special_offers FAILED')
+        print('<<ConnectTimeout>>')
+        return pka_category_skus
+    except requests.exceptions.ReadTimeout:    
+        print('--->  https://5ka.ru/api/v2/special_offers/?store=&records_per_page=12&page=1&shopitem_category=, special_offers FAILED')
+        print('<<ReadTimeout>>')
+        return pka_category_skus
     if len(special_offers['results']) == 0:
         return pka_category_skus
     try:
