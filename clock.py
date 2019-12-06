@@ -9,7 +9,7 @@ import requests
 
 sched = BlockingScheduler()
 
-@sched.scheduled_job('interval', minutes=30)
+@sched.scheduled_job('interval', minutes=20)
 def timed_job():
     start = dt.now()
     print('------> Job start at:', start)
