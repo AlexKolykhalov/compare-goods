@@ -146,11 +146,11 @@ def PKA(): # если разбить категории на подкатего�
     # ПЯТЁРОЧКА
     pka_category_skus = {}
     session = requests.Session()
-    try:
-        session.get('https://5ka.ru', timeout=25)
-    except requests.exceptions.ConnectTimeout:
-        print('------> 5ka FAILED')
-        return pka_category_skus
+#     try:
+#         session.get('https://5ka.ru', timeout=25)
+#     except requests.exceptions.ConnectTimeout:
+#         print('------> 5ka FAILED <<ConnectTimeout>>')
+#         return pka_category_skus
     kwargs = {'domain': '5ka.ru'}
     cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
     session.cookies.set_cookie(cookie)
@@ -181,8 +181,11 @@ def PKA(): # если разбить категории на подкатего�
             try:
                 subgroups = session.get('https://5ka.ru/api/v2/categories/'+group['parent_group_code']).json()
             except json.decoder.JSONDecodeError:
-                print('--->', 'https://5ka.ru/api/v2/categories/'+group['parent_group_code'], 'subgroup FAILED')
-                continue            
+                print('--->', 'https://5ka.ru/api/v2/categories/'+group['parent_group_code'], 'subgroup FAILED <<JSONDecodeError>>')
+                continue
+            except requests.exceptions.ConnectionError:
+                print('--->', 'https://5ka.ru/api/v2/categories/'+group['parent_group_code'], 'subgroup FAILED <<ConnectionError>>')
+                continue
             for subgroup in subgroups:
                 category = get_category(subgroup['group_name'])
                 if category == '':
