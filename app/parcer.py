@@ -198,7 +198,10 @@ def PKA(): # если разбить категории на подкатего�
                     try:
                         get = session.get(url).json()
                     except json.decoder.JSONDecodeError:
-                        print('--->', category+' ('+subgroup['group_name']+')')
+                        print('--->', category+' ('+subgroup['group_name']+') <<JSONDecodeError>>')
+                        continue
+                    except requests.exceptions.ConnectionError:
+                        print('--->', category+' ('+subgroup['group_name']+') <<ConnectionError>>')
                         continue
                     for skus in get['results']:
                         name = costruct_name(skus['name'])
@@ -228,7 +231,10 @@ def PKA(): # если разбить категории на подкатего�
                 try:
                     get = session.get(url).json()
                 except json.decoder.JSONDecodeError:
-                    print('--->', category)
+                    print('--->', category, '<<JSONDecodeError>>')
+                    continue
+                except requests.exceptions.ConnectionError:
+                    print('--->', category, '<<ConnectionError>>')
                     continue
                 for skus in get['results']:
                     name = costruct_name(skus['name'])
