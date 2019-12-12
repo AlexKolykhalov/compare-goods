@@ -369,7 +369,10 @@ def get_news():
         for news_content in perekrestok_news_content:
             news_href              = news_content.find('a')['href']
             page_news              = session.get(news_href, timeout=25)        
-            page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
+            try:
+                page_news_content_text = BeautifulSoup(page_news.content, 'html.parser').find_all('div', {'class': 'xf-promo-detail__description'})[0].text
+            except:
+                continue
             news_perekrestok       = news_perekrestok +'<hr>'+page_news_content_text+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'    
         print('Perekrestok news done.')
     except requests.exceptions.ConnectTimeout:
