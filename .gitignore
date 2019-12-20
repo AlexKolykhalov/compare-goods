@@ -2,9 +2,10 @@
 __pycache__
 .venv
 .vscode
+.env
+ssl keys
 launch.json
 settings.json
-.env
 db_products.db
 
 

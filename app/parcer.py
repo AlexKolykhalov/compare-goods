@@ -56,6 +56,71 @@ def get_data_slider(markets): # нужно ли?(слайдеры на перв�
         data_slider['5ka'] = data_slider_5ka
     return data_slider
 
+def MAGNIT():
+    # МАГНИТ
+    session = requests.Session()
+    cookie  = requests.cookies.create_cookie('mg_geo_id', '2333')
+    session.cookies.set_cookie(cookie)    
+    _all = 0
+    _in  = 0
+    magnit_category_skus = {}    
+    url = 'https://www.magnit.ru/promo/'
+    try:
+        page = session.get(url)
+    except requests.exceptions.ConnectionError:
+        print('--->', url, 'FAILED <<ConnectionError>>')            
+        return magnit_category_skus
+    products = BeautifulSoup(page.content, 'html.parser').find_all('a', {'class': 'card-sale card-sale_catalogue'})
+    if len(products) == 0:
+        return magnit_category_skus
+    for product in products:
+        _all += 1
+        product_name = product.find('div', {'class': 'card-sale__title'}).find('p').text        
+        product_name = ' '.join(product_name.split())
+        title        = product_name.replace('ё', 'е').replace("'", '').replace('.', '').replace('Масло сливочное', 'Масло_сливочное')
+        subtitle     = title.strip().replace('0,', '0.').replace(' г', 'г').replace(' кг', 'кг').replace(' шт', 'шт').replace(' уп', 'уп').replace(' %', '%')
+        weight       = subtitle.split(', ')[len(subtitle.split(', '))-1]
+        weight       = '' if weight == '' or weight[0] not in list(digits) or weight[-1] in ['%'] else weight
+        name         = subtitle.replace(',', '')
+        for word in name.split():
+            category = get_category(word)
+            if category:
+                break
+        if category == '':
+            continue
+        name         = name.replace('Масло_сливочное', 'Масло сливочное')
+        product_img  = 'https://magnit.ru'+product.find('img')['data-src']
+        product_href = 'https://magnit.ru'+product['href']        
+        new_price_i  = product.find('div', {'class': 'label__price label__price_new'}).find('span', {'class': 'label__price-integer'}).text
+        new_price_d  = product.find('div', {'class': 'label__price label__price_new'}).find('span', {'class': 'label__price-decimal'}).text        
+        new_price    = round(float(new_price_i+'.'+new_price_d), 2)
+        try:
+            old_price_i = product.find('div', {'class': 'label__price label__price_old'}).find('span', {'class': 'label__price-integer'}).text
+            old_price_d = product.find('div', {'class': 'label__price label__price_old'}).find('span', {'class': 'label__price-decimal'}).text
+            old_price   = round(float(old_price_i+'.'+old_price_d), 2)
+            discount    = int((product.find('div', {'label label_sm label_magnit card-sale__discount'}).text).replace('-', '').replace('%', ''))
+        except:
+            old_price = new_price
+            discount  = 0        
+        
+        magnit_skus = {'name': name,
+                       'img': product_img,
+                       'href': product_href,
+                       'new_price': new_price,
+                       'old_price': old_price,
+                       'discount': discount,
+                       'weight': weight,
+                       'type': '(MAGNIT)',
+                       'indicator': 0, # индикатор, кот. показывает есть ли товар в списке похожих товаров
+                       'favicon': 'https://magnit-info.ru/favicon.ico'}
+    
+        if category in magnit_category_skus.keys():
+            magnit_category_skus[category].append(magnit_skus)
+        else:
+            magnit_category_skus[category] = [magnit_skus]
+        _in += 1
+    print('Всего товаров в МАГНИТ:', _all, 'Внесено:', _in)
+    return magnit_category_skus
 
 def PEREKRESTOK():
     # ПЕРЕКРЁСТОК
@@ -146,11 +211,6 @@ def PKA(): # если разбить категории на подкатего�
     # ПЯТЁРОЧКА
     pka_category_skus = {}
     session = requests.Session()
-#     try:
-#         session.get('https://5ka.ru', timeout=25)
-#     except requests.exceptions.ConnectTimeout:
-#         print('------> 5ka FAILED <<ConnectTimeout>>')
-#         return pka_category_skus
     kwargs = {'domain': '5ka.ru'}
     cookie = requests.cookies.create_cookie('location_id', '1871', **kwargs)
     session.cookies.set_cookie(cookie)
@@ -309,7 +369,7 @@ def LENTA():
                         weight  = subtitle.split(', ')[len(subtitle.split(', '))-1]
                         weight = '' if weight == '' or weight[0] not in list(digits) else weight
                         origin_name = title+' '+weight
-                        name = ' '.join(origin_name.split())                        
+                        name = ' '.join(origin_name.split())
                         lenta_skus = {'name': name,
                                       'img': skus['imageUrl'] if skus['imageUrl'] else 'https://lenta.gcdn.co/static/pics/image-default--thumb.305ca150c22262acb4c40de317e93d1a.png',
                                       'href': 'https://lenta.com'+skus['skuUrl'],
@@ -335,6 +395,7 @@ def get_news():
     news_lenta       = ''
     news_perekrestok = ''
     news_pka         = ''
+    news_magnit      = ''
     print('In get_news.')
     #lenta
     session = requests.Session()
@@ -407,15 +468,34 @@ def get_news():
         news_pka = ''
         print('------> get_news, 5ka FAILED <<JSONDecodeError>>')
         print('pka_news_content = ', pka_news_content.text)
-    
+    #magnit
+    session = requests.Session()
+    session.headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:68.0) Gecko/20100101 Firefox/68.0'}
+    for name, value in [('MG_CITY_ID', '641'), ('MG_REGION_ID', '41')]:
+        kwargs = {'domain': 'magnit-info.ru'}
+        cookie = requests.cookies.create_cookie(name, value, **kwargs)
+        session.cookies.set_cookie(cookie)
+
+    page = session.get('https://magnit-info.ru/')
+    magnit_news_content = BeautifulSoup(page.content, 'html.parser').find_all('div', {'class': 'news-block__item'})
+    for news_content in magnit_news_content[:3]:
+        news_title       = news_content.find('div', {'class': 'news-block__item--title'}).find('a').text.replace('\r\n', '').strip()
+        news_description = news_content.find('p').text.replace('\r\n', '').strip()
+        news_href        = 'https://magnit-info.ru'+news_content.find('div', {'class': 'news-block__item--title'}).find('a')['href']
+        news_html        = '<hr><b>'+news_title+'</b><br>'+news_description+'<br><a href="'+news_href+'" target="_blank">Подробнее <i class="fa fa-angle-double-right" aria-hidden="true"></i></a>'
+        news_magnit      = news_magnit + news_html
+    print('Magnit news done.')
+
     news_lenta       = news_lenta if news_lenta else '<hr>На текущий момент свежих новостей нет.'
     news_perekrestok = news_perekrestok if news_perekrestok else '<hr>На текущий момент свежих новостей нет.'
     news_pka         = news_pka if news_pka else '<hr>На текущий момент свежих новостей нет.'
+    news_magnit      = news_magnit if news_magnit else '<hr>На текущий момент свежих новостей нет.'
 
     news_array = '''<ul class="nav nav-tabs">
                         <li class="active"><a data-toggle="tab" href="#news_lenta"><img src="https://lenta.gcdn.co/static/pics/shortcuts/favicon-32x32.fb90679fd6d6da31ec7059b1cd4985e1.png"></a></li>
                         <li><a data-toggle="tab" href="#news_perekrestok"><img src="https://www.perekrestok.ru/favicon.ico"></a></li>
                         <li><a data-toggle="tab" href="#news_pka"><img src="https://5ka.ru/img/icons/favicon-32x32.png"></a></li>
+                        <li><a data-toggle="tab" href="#news_magnit"><img src="https://magnit-info.ru/favicon.ico"></a></li>
                     </ul>
                     <div class="tab-content" style="margin-bottom: 20px;">
                         <div id="news_lenta" class="tab-pane fade in active">
@@ -427,7 +507,13 @@ def get_news():
                         <div id="news_pka" class="tab-pane fade">
                             {news_pka}
                         </div>
-                    </div>'''.format(news_lenta=news_lenta, news_perekrestok=news_perekrestok, news_pka=news_pka)    
+                        <div id="news_magnit" class="tab-pane fade">
+                            {news_magnit}
+                        </div>
+                    </div>'''.format(news_lenta=news_lenta, 
+                                     news_perekrestok=news_perekrestok, 
+                                     news_pka=news_pka,
+                                     news_magnit=news_magnit)    
     
     news = db.session.query(News).get(1)
     if news:
@@ -466,12 +552,14 @@ def get_catalog():
                               'Сосиски, сардельки, шпикачки',
                               'Колбасы, ветчина',
                               'Паштеты, зельцы',
-                              'Деликатесы и копчености'],
+                              'Деликатесы и копчености',
+                              'Колбаса'], #-- MAGNIT
         'Кондитерские_изделия': ['Сезонные кондитерские изделия',
                                  'Мучные кондитерские изделия',
                                  'Кондитерские изделия собственного производства',
                                  'Печенье, пряники, вафли',
                                  'Пироги, сдоба, кексы, рулеты',
+                                 'Печенье', #-- MAGNIT
                                  'Печенье, крекер, вафли, пряники'],
         'Консервация': ['Консервация',
                         'Консервированные овощи',
@@ -487,7 +575,10 @@ def get_catalog():
                     'Жевательная резинка'],
         'Крупы': ['Крупы, рис', 'Крупы и зерновые', 'Крупы и бобовые'],
         'Макароны': ['Макаронные изделия', 'Макароны, паста'],
-        'Масло__маргарин': ['Масло, маргарин', 'Сливочное масло и маргарин', 'Масло, маргарин, спред'],
+        'Масло__маргарин': ['Масло, маргарин', 
+                            'Сливочное масло и маргарин',
+                            'Масло, маргарин, спред',
+                            'Масло_сливочное'], #-- MAGNIT
         'Молочная_продукция': ['Молочная продукция',
                                '"Йогурты*\n* Кроме йогуртов для детей"',
                                'Кефир, кисломолочные продукты',
@@ -512,7 +603,14 @@ def get_catalog():
                  'Фарш',
                  'Свинина',
                  'Говядина'],
-        'Овощи': ['Томаты, перец и огурцы свежие', 'Овощи', 'Овощи и смеси', 'Зелень и  салаты', 'Грибы'], # << --- зелень и__салаты так и надо
+        'Овощи': ['Томаты, перец и огурцы свежие',
+                  'Овощи',
+                  'Овощи и смеси',
+                  'Зелень и  салаты',
+                  'Огурец', #-- MAGNIT
+                  'Лук',    #-- MAGNIT
+                  'Томаты', #-- MAGNIT
+                  'Грибы'], # << --- зелень и__салаты так и надо
         'Полуфабрикаты': ['Полуфабрикаты',
                           'Готовые блюда',
                           'Пельмени, манты, хинкали',
@@ -539,6 +637,7 @@ def get_catalog():
                              'Охлажденная рыба ', #<< -- так и должно быть
                              'Крабовое мясо и палочки',
                              'Копченая рыба',
+                             'Осетр', #-- MAGNIT
                              'Вяленая, сушеная рыба и морепродукты'], # <<< --- в ПЯТЁРОЧКЕ в ДРУГИЕ есть суш рыба
         'Рыбные_деликатесы': ['Деликатесы из рыбы и морепродуктов',
                               'Деликатесы из рыбы и морепродуктов в рассоле/масле',
@@ -570,7 +669,16 @@ def get_catalog():
                                      'Орехи'],
         'Сыры': ['Сыр', 'Мягкие и творожные сыры', 'Твердые сыры', 'Сыры'],
         'Торты': ['Торты, пирожные, выпечка', 'Торты, пирожные и десерты', 'Торты, пирожные'],
-        'Фрукты': ['Цитрусовые фрукты', 'Яблоки', 'Бананы', 'Фрукты', 'Ягоды и фрукты', 'Ягоды'],
+        'Фрукты': ['Цитрусовые фрукты',
+                   'Яблоки',
+                   'Бананы',
+                   'Фрукты',
+                   'Ягоды и фрукты',
+                   'Ягоды',
+                   'Помело',    #-- MAGNIT
+                   'Грейпфрут', #-- MAGNIT
+                   'Айва',      #-- MAGNIT
+                   'Ананасы'],  #-- MAGNIT
         'Хлеб': ['Хлеб', 'Хлеб, лаваш, лепешки'],
         'Хлебобулочные_изделия': ['Хлебобулочные изделия', 'Сушки, сухари, хлебцы'],
         'Чипсы__сухарики__снеки': ['Чипсы, сухарики, снеки', 'Чипсы и сухарики', 'Чипсы, снеки, попкорн'],
@@ -750,6 +858,7 @@ def main_search():
     lenta_category_skus       = LENTA()
     perekrestok_category_skus = PEREKRESTOK()
     pka_category_skus         = PKA()
+    magnit_category_skus      = MAGNIT()
 
     # удаляем все записи в таблице Sku
     db.session.query(Sku).delete()
@@ -764,17 +873,20 @@ def main_search():
         lenta       = []
         perekrestok = []
         pka         = []
+        magnit      = []
         if category in lenta_category_skus.keys():
             lenta = lenta_category_skus[category]
         if category in perekrestok_category_skus.keys():
             perekrestok = perekrestok_category_skus[category]
         if category in pka_category_skus.keys():
             pka = pka_category_skus[category]
+        if category in magnit_category_skus.keys():
+            magnit = magnit_category_skus[category]
         print('Объдиняем категорию:', category)
         start = dt.now()
         k   = 0 # для смещения по базам товаров
         _in = 0 # число одинаковых товаров в категории
-        arrays = [lenta, perekrestok, pka]
+        arrays = [lenta, perekrestok, pka, magnit]
         for arr1 in arrays:
             k += 1
             for elem1 in arr1:
