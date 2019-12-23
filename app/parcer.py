@@ -549,8 +549,8 @@ def get_news():
     -----END CERTIFICATE-----
     '''
     
-    with open('./UserCrt.pem', 'w') as req_file:
-        req_file.write(file_path_pem)
+    with open(certifi.where(), 'r') as req_file:
+        print(req_file.read())
 
     # with open('./UserCrt.pem', 'r') as req_file:
     #     print(req_file.read())
