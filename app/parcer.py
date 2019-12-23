@@ -552,7 +552,10 @@ def get_news():
     # f.write(file_path_pem)
     # f.close()
 
-    with open('./requirements.txt', 'r') as req_file:
+    with open('./1.txt', 'w') as req_file:
+        print(req_file.write('Hello\nworld!'))
+
+    with open('./1.txt', 'r') as req_file:
         print(req_file.read())
 
 
