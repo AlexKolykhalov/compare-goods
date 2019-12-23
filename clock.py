@@ -1,5 +1,5 @@
 from app                             import create_app
-from app.parcer                      import main_search
+from app.parcer                      import main_search, get_news
 
 from flask                           import current_app
 from datetime                        import datetime as dt
@@ -9,13 +9,14 @@ import requests
 
 sched = BlockingScheduler()
 
-@sched.scheduled_job('interval', minutes=20)
+@sched.scheduled_job('interval', minutes=2)
 def timed_job():
     start = dt.now()
     print('------> Job start at:', start)
     app = create_app()
     with app.app_context():
-        main_search()
+        get_news()
+        # main_search()
     end = dt.now()
     print('------> Job done at:', end)
 
