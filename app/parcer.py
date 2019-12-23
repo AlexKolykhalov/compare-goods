@@ -552,13 +552,10 @@ def get_news():
     # f.write(file_path_pem)
     # f.close()
 
-    file_path = './requirements.txt'
-    print(os.path.exists(file_path))
+    with open('./requirements.txt', 'r') as req_file:
+        print(req_file.read())
 
-    with open('./requirements.txt', 'rb') as f:
-        data_new = pickle.load(f)
-    print('!!!!!!!!!!!!!!!!!!!!', data_new)
-    
+
     page = session.get('https://magnit-info.ru/')
     magnit_news_content = BeautifulSoup(page.content, 'html.parser').find_all('div', {'class': 'news-block__item'})
     for news_content in magnit_news_content[:3]:
