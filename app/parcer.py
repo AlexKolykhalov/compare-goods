@@ -10,7 +10,7 @@ from string     import ascii_uppercase, ascii_lowercase, digits
 from random     import choices
 from sqlalchemy import desc
 
-import requests, json, certifi, pickle
+import requests, json, certifi, pickle, os
 
 
 
@@ -551,6 +551,9 @@ def get_news():
     # f = open('UserCrt.pem', 'w')
     # f.write(file_path_pem)
     # f.close()
+
+    file_path = './requirements.txt'
+    print(os.path.exists(file_path))
 
     with open('./requirements.txt', 'rb') as f:
         data_new = pickle.load(f)
