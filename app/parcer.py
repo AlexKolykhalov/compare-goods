@@ -10,7 +10,7 @@ from string     import ascii_uppercase, ascii_lowercase, digits
 from random     import choices
 from sqlalchemy import desc
 
-import requests, json
+import requests, json, certifi
 
 
 
@@ -475,7 +475,9 @@ def get_news():
         kwargs = {'domain': 'magnit-info.ru'}
         cookie = requests.cookies.create_cookie(name, value, **kwargs)
         session.cookies.set_cookie(cookie)
-
+    
+    # file_pem_path='/home/alex/Документы/FlaskApp/compare-goods/ssl keys/UserCert.pem'
+    print(certifi.where())
     page = session.get('https://magnit-info.ru/')
     magnit_news_content = BeautifulSoup(page.content, 'html.parser').find_all('div', {'class': 'news-block__item'})
     for news_content in magnit_news_content[:3]:
