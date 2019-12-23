@@ -594,7 +594,8 @@ def get_news():
     '''
     
     file_pem_path='/home/alex/Документы/FlaskApp/compare-goods/ssl keys/UserCert.pem'
-
+    file_cacert_pem = certifi.where()
+    print(file_cacert_pem)
     with open('./usercert.pem', 'w') as req_file:
         print(req_file.write(user_cert_pem))
 
