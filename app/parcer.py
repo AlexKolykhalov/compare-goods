@@ -91,7 +91,10 @@ def MAGNIT():
         name         = name.replace('Масло_сливочное', 'Масло сливочное')
         product_img  = 'https://magnit.ru'+product.find('img')['data-src']
         product_href = 'https://magnit.ru'+product['href']        
-        new_price_i  = product.find('div', {'class': 'label__price label__price_new'}).find('span', {'class': 'label__price-integer'}).text
+        try:
+            new_price_i  = product.find('div', {'class': 'label__price label__price_new'}).find('span', {'class': 'label__price-integer'}).text
+        except:
+            continue
         new_price_d  = product.find('div', {'class': 'label__price label__price_new'}).find('span', {'class': 'label__price-decimal'}).text        
         new_price    = round(float(new_price_i+'.'+new_price_d), 2)
         try:
