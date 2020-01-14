@@ -21,7 +21,8 @@
                     <span class="icon-bar"></span>
                 </button>
                 <a class="navbar-brand" href="{{ url_for('main.index') }}">Сравни</a>
-            </div>            
+                <i onclick="window.location.href='/goods/?hearts_values'" id="heart_i" class='fa fa-heart-o fa-2x aria-hidden="true"' style="color: #ffc000; margin-top: 10px; width: 40%; position: absolute; text-align: end; cursor: pointer;"></i>
+            </div>
             <div class="collapse navbar-collapse" id="navbar-main">
                 <form class="navbar-form navbar-right">
                     <button id="search_button" type="button" class="btn btn-default"><i class="fa fa-search" aria-hidden="true"></i> Поиск</button>
@@ -88,10 +89,11 @@
 
 {% block scripts %}
     {{ super() }}    
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@2/src/js.cookie.min.js"></script>
     <script>
         // функция, осущ. задержку времени при изменении размера окна (для)
-        var waitForFinalEvent = (function() {
-            var timers = {};
+        let waitForFinalEvent = (function() {
+            let timers = {};
             return function (callback, ms, uniqueId) {
                 if (!uniqueId) {
                     uniqueId = "Don't call this twice without a uniqueId";
@@ -103,12 +105,72 @@
             };
         })();
         
+        function check_cookies_hearts() {
+            $.get("{{url_for('main.get_count_of_hearts')}}")
+                    .done(function(response){
+                        if (response == '0') {                            
+                            if ($('#heart_i').hasClass('fa-heart')) {
+                                $('#heart_i').toggleClass('fa-heart fa-heart-o');
+                            }
+                        } else {
+                            if ($('#heart_i').hasClass('fa-heart-o')) {
+                                $('#heart_i').toggleClass('fa-heart fa-heart-o');
+                            }
+                        }
+                    });
+        }
+
+        function replace_heart_class(html_text) {
+            hearts_values  = Cookies.get('hearts_values');
+            if (hearts_values) {
+                hearts_values = new Set(hearts_values.split(','));
+                for (let val of hearts_values) {
+                    reg_old = new RegExp('<i id="'+val+'" class="fa fa-heart-o"></i>', 'gi');
+                    new_string = '<i id="'+val+'" class="fa fa-heart"></i>';
+                    html_text = html_text.replace(reg_old, new_string);
+                }
+            }
+            return html_text;
+        }
+
+        $(document).ready(function() {
+            check_cookies_hearts();
+        })
+                        
         $(document).on('click', function(e) {
-            if ($(e.target).hasClass('fa fa-heart-o') || $(e.target).hasClass('fa fa-heart')) {
-                $(e.target).toggleClass("fa-heart fa-heart-o");
+            // если нажатый элемент имеет классы 'fa fa-heart-o'
+            // 'fa fa-heart' и не имеет атрибута id
+            if (($(e.target).hasClass('fa fa-heart-o') || $(e.target).hasClass('fa fa-heart')) && e.target.id != 'heart_i') {
+                let hearts_values;
+                hearts_values = Cookies.get('hearts_values');
+                if (hearts_values) {
+                    hearts_values = new Set(hearts_values.split(','));
+                } else {
+                    hearts_values = new Set();
+                }
+                //нажали heart у карточки товара
+                if ($(e.target).hasClass('fa fa-heart-o')) {                    
+                    hearts_values.add(e.target.id);
+                    val = Array.from(hearts_values.values()).join(',');
+                    Cookies.set('hearts_values', val);
+                }
+                //отжали heart у карточки товара
+                if ($(e.target).hasClass('fa fa-heart')) {
+                    hearts_values.delete(e.target.id);
+                    val = Array.from(hearts_values.values()).join(',');
+                    Cookies.set('hearts_values', val);
+                    if (hearts_values.size == 0) {
+                        Cookies.remove('hearts_values');
+                    }
+                }
+                //поменяли цвет heart
+                $('[id="'+e.target.id+'"]').toggleClass("fa-heart fa-heart-o");
+                //проверили количество нажатых heart и если 
+                //это кол-во = 0, то поменяли цвет у heart_i                
+                check_cookies_hearts();
             }
         });
-
+        
         // открытие модального окна Поиск
         $('#search_button').click(function() {
             $('#search_modal').modal('show');
@@ -122,7 +184,7 @@
         });
 
         $('#inputdefault').on('input', function() {
-            var
+            let
                 _spinner = $('#spinner'),
                 _search_result = $('#search_result');
             
