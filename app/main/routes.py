@@ -4,7 +4,8 @@ from app.main   import bp
 from app.models import Sku, News
 from app.parcer import get_catalog, html_creator
 
-from flask      import render_template, request, url_for
+from flask        import render_template, request, url_for
+from urllib.parse import unquote_plus
 
 
 
@@ -17,14 +18,22 @@ def index():
 @bp.route('/goods/')
 @bp.route('/goods/<category_number>')
 def goods(category_number=None):
-    sku         = request.args.get('sku')
-    search_text = request.args.get('search_text')
-    checked     = request.cookies.get('switch_value')
-            
+    sku                   = request.args.get('sku')
+    hearts_values         = request.args.get('hearts_values') # нажали на heart в nav-bar
+    search_text           = request.args.get('search_text')
+    only_twin             = request.cookies.get('switch_value')
+    
+    if request.cookies.get('hearts_values'):
+        raw_cookies = unquote_plus(request.cookies.get('hearts_values'))
+        cookies_hearts_values = raw_cookies.split(',')
+    else:
+        cookies_hearts_values = []
+        
     data = html_creator(sort_method='null',                                                           
                         search_text=search_text,
-                        checked=checked,
+                        only_twin=only_twin,
                         sku=sku,
+                        hearts_values=None if hearts_values is None else cookies_hearts_values,
                         category_number=category_number,
                         offset=0,
                         count_of_products=12,
@@ -46,10 +55,19 @@ def goods(category_number=None):
     if sku:
         title = 'Карточка товара'
         show_checkbox = False
+    if hearts_values is not None:
+        title = 'Любимые товары'
+        
+    # set hearts
+    for val in cookies_hearts_values:
+        old = '<i id="{id}" class="fa fa-heart-o"></i>'.format(id=val)
+        new = '<i id="{id}" class="fa fa-heart"></i>'.format(id=val)
+        html_text = html_text.replace(old, new)
+    
     return render_template('goods.html', html_text=html_text, 
                                          show_load_button=show_load_button, 
                                          title=title, 
-                                         checked=checked, 
+                                         checked=only_twin, 
                                          show_checkbox=show_checkbox)
 
 #ajax
@@ -79,15 +97,17 @@ def get_catalog_tree():
 #ajax
 @bp.route('/add_loading')
 def add_loading():
-    offset          = int(request.args.get('offset')) # количество товаров на странице discounts    
-    sort_method     = request.args.get('sort_method') # метод сортировки (возр/убыв)
-    search_text     = None if request.args.get('search_text') == '' else  request.args.get('search_text')        # текст поиска
-    category_number = None if request.args.get('category_number') == '' else request.args.get('category_number') # номер категории товара
-    checked         = request.cookies.get('switch_value')
+    offset                = int(request.args.get('offset')) # скрытое число (см. offset на стр. goods, а также ajax-запросы)
+    sort_method           = request.args.get('sort_method') # метод сортировки (возр/убыв)
+    search_text           = None if request.args.get('search_text') == '' else  request.args.get('search_text')        # текст поиска
+    category_number       = None if request.args.get('category_number') == '' else request.args.get('category_number') # номер категории товара
+    cookies_hearts_values = None if request.args.get('hearts_values') is None else request.args.get('hearts_values').split(',')   # id товаров, которые выбраны как любимые
+    only_twin             = request.cookies.get('switch_value')
 
     return html_creator(sort_method=sort_method,
                         search_text=search_text,
-                        checked=checked,
+                        only_twin=only_twin,
+                        hearts_values=cookies_hearts_values,
                         category_number=category_number,
                         offset=offset,
                         count_of_products=12,
@@ -113,3 +133,11 @@ def products_search():
         result = '<b>Товары</b><br>'+products+'<a href="{}">'.format(url_for('main.goods', search_text=search_text))+'<b>Показать всех <i class="fa fa-angle-double-right" aria-hidden="true"></i></b></a>'
 
     return result
+
+#ajax
+@bp.route('/get_count_of_hearts')
+def get_count_of_hearts():
+    count_of_hearts = 0
+    if request.cookies.get('hearts_values'):
+        count_of_hearts = len(request.cookies.get('hearts_values').replace('%2C', ',').split(','))    
+    return str(count_of_hearts)
