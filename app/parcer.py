@@ -830,7 +830,7 @@ def get_html_product(product_array, index, key, reverse):
         
         tab_content = '''<div id="{tab_href}" class="tab-pane fade {in_active}">
                             <div class="thumb-wrapper">
-                                <span id='heart' class="wish-icon"><i class="fa fa-heart-o"></i></span>
+                                <span class="wish-icon"><i id="{index}" class="fa fa-heart-o"></i></span>
                                 <div class="img-box">
                                     <img src="{img}" class="img-responsive" alt="">
                                 </div>
@@ -845,6 +845,7 @@ def get_html_product(product_array, index, key, reverse):
                             </div>
                         </div>'''.format(in_active=in_active,
                                          tab_href=tab_href,
+                                         index=index,
                                          img=row['img'],
                                          href=row['href'],
                                          name=row['name'],
@@ -859,7 +860,7 @@ def get_html_product(product_array, index, key, reverse):
 
     return product_html
 
-def html_creator(sort_method, category_number, offset, count_of_products, products_per_row, add_loading, checked=None, search_text=None, sku=None):
+def html_creator(sort_method, category_number, offset, count_of_products, products_per_row, add_loading, only_twin=None, search_text=None, sku=None, hearts_values=None):
 
     if sku:
         sorted_products = db.session.query(Sku).get(sku).sku_html_1
@@ -867,13 +868,18 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
         return {'html_text': html_text, 'show_load_button': False}
     else:
         if sort_method == 'null':
-            if category_number:
-                if checked:
+            if hearts_values is not None:
+                if only_twin:
+                    sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.id.in_(hearts_values), Sku.sku_twin==True).order_by(desc(Sku.sku_discount_desc), Sku.sku_name).offset(offset).limit(13).all()
+                else:
+                    sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.id.in_(hearts_values)).order_by(desc(Sku.sku_discount_desc), Sku.sku_name).offset(offset).limit(13).all()
+            elif category_number:
+                if only_twin:
                     sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_category==category_number, Sku.sku_twin==True).order_by(desc(Sku.sku_discount_desc), Sku.sku_name).offset(offset).limit(13).all()
                 else:
                     sorted_products = db.session.query(Sku.sku_html_1).filter_by(sku_category=category_number).order_by(desc(Sku.sku_discount_desc), Sku.sku_name).offset(offset).limit(13).all()
             else:
-                if checked:
+                if only_twin:
                     if search_text:
                         sorted_products = db.session.query(Sku.sku_html_1).filter(Sku.sku_twin==True, Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_discount_desc), Sku.sku_name).offset(offset).limit(13).all()
                     else:                        
@@ -884,13 +890,18 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
                     else:
                         sorted_products = db.session.query(Sku.sku_html_1).order_by(desc(Sku.sku_discount_desc), Sku.sku_name).offset(offset).limit(13).all()        
         elif sort_method == 'asc':
-            if category_number:
-                if checked:
+            if hearts_values:
+                if only_twin:
+                    sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.id.in_(hearts_values), Sku.sku_twin==True).order_by(Sku.sku_price_asc, Sku.sku_name).offset(offset).limit(13).all()
+                else:
+                    sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.id.in_(hearts_values)).order_by(Sku.sku_price_asc, Sku.sku_name).offset(offset).limit(13).all()
+            elif category_number:
+                if only_twin:
                     sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_category==category_number, Sku.sku_twin==True).order_by(Sku.sku_price_asc, Sku.sku_name).offset(offset).limit(13).all()
                 else:
                     sorted_products = db.session.query(Sku.sku_html_2).filter_by(sku_category=category_number).order_by(Sku.sku_price_asc, Sku.sku_name).offset(offset).limit(13).all()
             else:
-                if checked:
+                if only_twin:
                     if search_text:
                         sorted_products = db.session.query(Sku.sku_html_2).filter(Sku.sku_twin==True, Sku.sku_lowercase.like(search_text)).order_by(Sku.sku_price_asc, Sku.sku_name).offset(offset).limit(13).all()
                     else:
@@ -901,13 +912,18 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
                     else:
                         sorted_products = db.session.query(Sku.sku_html_2).order_by(Sku.sku_price_asc, Sku.sku_name).offset(offset).limit(13).all()
         elif sort_method == 'desc':
-            if category_number:
-                if checked:
+            if hearts_values:
+                if only_twin:
+                    sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.id.in_(hearts_values), Sku.sku_twin==True).order_by(desc(Sku.sku_price_desc), Sku.sku_name).offset(offset).limit(13).all()
+                else:
+                    sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.id.in_(hearts_values)).order_by(desc(Sku.sku_price_desc), Sku.sku_name).offset(offset).limit(13).all()
+            elif category_number:
+                if only_twin:
                     sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_category==category_number, Sku.sku_twin==True).order_by(desc(Sku.sku_price_desc), Sku.sku_name).offset(offset).limit(13).all()
                 else:
                     sorted_products = db.session.query(Sku.sku_html_3).filter_by(sku_category=category_number).order_by(desc(Sku.sku_price_desc), Sku.sku_name).offset(offset).limit(13).all()
             else:
-                if checked:
+                if only_twin:
                     if search_text:
                         sorted_products = db.session.query(Sku.sku_html_3).filter(Sku.sku_twin==True, Sku.sku_lowercase.like(search_text)).order_by(desc(Sku.sku_price_desc), Sku.sku_name).offset(offset).limit(13).all()
                     else:
