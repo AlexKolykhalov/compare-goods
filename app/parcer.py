@@ -1,16 +1,19 @@
-from app        import db
+from app          import db
 # from app        import index_algoliasearch
-from app.models import Sku, News
+from app.models   import Sku, News, DbStatus
 
-from fuzzywuzzy import fuzz
-from threading  import Thread
-from datetime   import datetime as dt, timedelta
-from bs4        import BeautifulSoup
-from string     import ascii_uppercase, ascii_lowercase, digits
-from random     import choices
-from sqlalchemy import desc
+from flask        import request
+from fuzzywuzzy   import fuzz
+from threading    import Thread
+from datetime     import datetime as dt, timedelta
+from bs4          import BeautifulSoup
+from string       import ascii_uppercase, ascii_lowercase, digits
+from random       import choices
+from sqlalchemy   import desc
+from urllib.parse import unquote_plus
 
 import requests, json, certifi, pickle, os
+
 
 
 
@@ -805,6 +808,15 @@ def costruct_name(name):
     
     return ' '.join(costruct_name.split())
 
+def get_cookies_hearts_values():
+    if request.cookies.get('hearts_values'):
+        raw_cookies = unquote_plus(request.cookies.get('hearts_values'))
+        cookies_hearts_values = raw_cookies.split(',')
+    else:
+        cookies_hearts_values = []
+    
+    return cookies_hearts_values
+
 # варианты сортировок
 def by_discount(elem):
     return elem['discount']
@@ -967,12 +979,27 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
     return {'carousel_indicators': html_text_carousel_indicators, 'carousel_inner': html_text_carousel_inner, 'html_text': html_text, 'show_load_button': show_load_button}
 
 def main_search():
+    
+    # change status(updating=True, updated=False) DB
+    dbStatus = db.session.query(DbStatus).get(1)
+    if dbStatus:
+        dbStatus.status = '1'
+    else:
+        dbStatus = DbStatus(status='1')    
+        db.session.add(dbStatus)
+        
+    db.session.commit()
+    
+    # get Cookies (hearts_values) & DB data
+    cookies_hearts_values = get_cookies_hearts_values()    
+    heart_products = db.session.query(Sku.id, Sku.sku_lowercase).filter(Sku.id.in_(cookies_hearts_values)).all()
+
     get_news()
     lenta_category_skus       = LENTA()
     perekrestok_category_skus = PEREKRESTOK()
     pka_category_skus         = PKA()
     magnit_category_skus      = MAGNIT()
-
+    
     # удаляем все записи в таблице Sku
     db.session.query(Sku).delete()
     db.session.commit()
@@ -1035,6 +1062,11 @@ def main_search():
                 #create a sku in database
                 index = ''.join(choices(ascii_uppercase + ascii_lowercase + digits, k=12)) # получаем случайный индекс
 
+                # compare hearts_values & new product lowercase name
+                for heart_product in heart_products:
+                    if heart_product.sku_lowercase == elem1['name'].lower():
+                        index = heart_product.id
+                
                 sku_discount_desc = sorted(product, key=by_discount, reverse=True) # макс скидка
                 sku_price_asc     = sorted(product, key=by_price)                  # мин цена
                 sku_price_desc    = sorted(product, key=by_price, reverse=True)    # макс цена
@@ -1070,3 +1102,9 @@ def main_search():
     print('Общее время выполнения: '+str(end-beg)+' сек.')
     print('Всего внесено: '+str(_all))
     print('Общее количество товара: '+str(_total))
+
+    # change status(counting=True, counted=False) DB
+    dbStatus = db.session.query(DbStatus).get(1)
+    dbStatus.status = '0'
+    
+    db.session.commit()
