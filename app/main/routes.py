@@ -1,11 +1,10 @@
 from app        import db
 # from app        import index_algoliasearch
 from app.main   import bp
-from app.models import Sku, News
-from app.parcer import get_catalog, html_creator
+from app.models import Sku, News, DbStatus
+from app.parcer import get_catalog, html_creator, get_cookies_hearts_values
 
-from flask        import render_template, request, url_for
-from urllib.parse import unquote_plus
+from flask      import render_template, request, url_for
 
 
 
@@ -23,11 +22,7 @@ def goods(category_number=None):
     search_text           = request.args.get('search_text')
     only_twin             = request.cookies.get('switch_value')
     
-    if request.cookies.get('hearts_values'):
-        raw_cookies = unquote_plus(request.cookies.get('hearts_values'))
-        cookies_hearts_values = raw_cookies.split(',')
-    else:
-        cookies_hearts_values = []
+    cookies_hearts_values = get_cookies_hearts_values()
         
     data = html_creator(sort_method='null',                                                           
                         search_text=search_text,
@@ -141,3 +136,10 @@ def get_count_of_hearts():
     if request.cookies.get('hearts_values'):
         count_of_hearts = len(request.cookies.get('hearts_values').replace('%2C', ',').split(','))    
     return str(count_of_hearts)
+
+#ajax
+@bp.route('/check_db_status')
+def check_db_status():
+    dbStatus = db.session.query(DbStatus).get(1)
+    result = dbStatus.status if dbStatus.status else '0'
+    return result
