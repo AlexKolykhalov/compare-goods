@@ -82,6 +82,21 @@
             </div>
         </div>
 
+        <div id="attention_modal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Предупреждение</h4>
+                    </div>
+                    <div class="modal-body">
+                        Идет обновление данных, подождите пару минут.
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {% block app_content %}
         {% endblock %}
     </div>
@@ -141,33 +156,41 @@
             // если нажатый элемент имеет классы 'fa fa-heart-o'
             // 'fa fa-heart' и не имеет атрибута id
             if (($(e.target).hasClass('fa fa-heart-o') || $(e.target).hasClass('fa fa-heart')) && e.target.id != 'heart_i') {
-                let hearts_values;
-                hearts_values = Cookies.get('hearts_values');
-                if (hearts_values) {
-                    hearts_values = new Set(hearts_values.split(','));
-                } else {
-                    hearts_values = new Set();
-                }
-                //нажали heart у карточки товара
-                if ($(e.target).hasClass('fa fa-heart-o')) {                    
-                    hearts_values.add(e.target.id);
-                    val = Array.from(hearts_values.values()).join(',');
-                    Cookies.set('hearts_values', val);
-                }
-                //отжали heart у карточки товара
-                if ($(e.target).hasClass('fa fa-heart')) {
-                    hearts_values.delete(e.target.id);
-                    val = Array.from(hearts_values.values()).join(',');
-                    Cookies.set('hearts_values', val);
-                    if (hearts_values.size == 0) {
-                        Cookies.remove('hearts_values');
-                    }
-                }
-                //поменяли цвет heart
-                $('[id="'+e.target.id+'"]').toggleClass("fa-heart fa-heart-o");
-                //проверили количество нажатых heart и если 
-                //это кол-во = 0, то поменяли цвет у heart_i                
-                check_cookies_hearts();
+                // проверка БД на текущий расчет
+                $.get("{{url_for('main.check_db_status')}}")
+                    .done(function(response){
+                        if (response == '1') { // если БД в данный момент обновляется
+                            $('#attention_modal').modal('show');
+                        } else {
+                            let hearts_values;
+                            hearts_values = Cookies.get('hearts_values');
+                            if (hearts_values) {
+                                hearts_values = new Set(hearts_values.split(','));
+                            } else {
+                                hearts_values = new Set();
+                            }
+                            //нажали heart у карточки товара
+                            if ($(e.target).hasClass('fa fa-heart-o')) {                    
+                                hearts_values.add(e.target.id);
+                                val = Array.from(hearts_values.values()).join(',');
+                                Cookies.set('hearts_values', val);
+                            }
+                            //отжали heart у карточки товара
+                            if ($(e.target).hasClass('fa fa-heart')) {
+                                hearts_values.delete(e.target.id);
+                                val = Array.from(hearts_values.values()).join(',');
+                                Cookies.set('hearts_values', val);
+                                if (hearts_values.size == 0) {
+                                    Cookies.remove('hearts_values');
+                                }
+                            }
+                            //поменяли цвет heart
+                            $('[id="'+e.target.id+'"]').toggleClass("fa-heart fa-heart-o");
+                            //проверили количество нажатых heart и если 
+                            //это кол-во = 0, то поменяли цвет у heart_i                
+                            check_cookies_hearts();
+                        }
+                    });
             }
         });
         
