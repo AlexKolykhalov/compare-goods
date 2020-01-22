@@ -75,6 +75,16 @@ h4 {
     margin: auto 0;	
 	background-image: none;	
 }
+.navbar-center {
+	position: absolute;
+	width: 100%;
+	left: 0;
+	top: 0;
+	text-align: center;
+	overflow: visible;
+	height: 0;
+}
+
 /* css карточки товара */
 .thumb-wrapper {
 	padding: 	25px 0px;
