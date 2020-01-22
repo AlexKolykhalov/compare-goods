@@ -1,8 +1,8 @@
 from app          import db
 # from app        import index_algoliasearch
-from app.models   import Sku, News, DbStatus
+from app.models   import Sku, News, Users, DbStatus
 
-from flask        import request
+from flask_login  import login_user
 from fuzzywuzzy   import fuzz
 from threading    import Thread
 from datetime     import datetime as dt, timedelta
@@ -10,9 +10,8 @@ from bs4          import BeautifulSoup
 from string       import ascii_uppercase, ascii_lowercase, digits
 from random       import choices
 from sqlalchemy   import desc
-from urllib.parse import unquote_plus
 
-import requests, json, certifi, pickle, os
+import requests, json
 
 
 
@@ -808,14 +807,28 @@ def costruct_name(name):
     
     return ' '.join(costruct_name.split())
 
-def get_cookies_hearts_values():
-    if request.cookies.get('hearts_values'):
-        raw_cookies = unquote_plus(request.cookies.get('hearts_values'))
-        cookies_hearts_values = raw_cookies.split(',')
+def get_random_index(size):
+    return ''.join(choices(ascii_uppercase + ascii_lowercase + digits, k=size))
+
+def crud_operation(operation, userId, heartId):
+    user = db.session.query(Users).get(userId)
+    if user:
+        json_data = json.loads(user.heart_productsId)
+        if operation == 'create':
+            json_data['id'].append(heartId)
+        else:
+            json_data['id'].remove(heartId)
+        user.heart_productsId = json.dumps(json_data)
+        db.session.commit()
     else:
-        cookies_hearts_values = []
+        json_data = {'id': []}
+        json_data['id'].append(heartId)
+        user = Users(id=userId, heart_productsId=json.dumps(json_data), visit_time=dt.now())
+        db.session.add(user)
+        db.session.commit()
+        login_user(user)
     
-    return cookies_hearts_values
+    return len(json_data['id'])
 
 # варианты сортировок
 def by_discount(elem):
@@ -980,30 +993,41 @@ def html_creator(sort_method, category_number, offset, count_of_products, produc
 
 def main_search():
     
-    # change status(updating=True, updated=False) DB
+    # смена статуса БД (status='1'(обновляется), status='0'(не обновляется))
     dbStatus = db.session.query(DbStatus).get(1)
     if dbStatus:
         dbStatus.status = '1'
     else:
         dbStatus = DbStatus(status='1')    
         db.session.add(dbStatus)
-        
-    db.session.commit()
+    db.session.commit()    
     
-    # get Cookies (hearts_values) & DB data
-    cookies_hearts_values = get_cookies_hearts_values()    
-    heart_products = db.session.query(Sku.id, Sku.sku_lowercase).filter(Sku.id.in_(cookies_hearts_values)).all()
+    # удалить непосещаемых пользователей
+    count_of_Users = db.session.query(Users).count()
+    count_of_deleted_Users = db.session.query(Users).filter(Users.visit_time < (dt.now()-timedelta(minutes=10))).delete()
+    print('Всего пользователей: ', count_of_Users)
+    print('Количество удаленных пользователей: ', count_of_deleted_Users)
+    db.session.commit()
+
+    # выбрать все сердечные из Users
+    heart_productsId = db.session.query(Users.heart_productsId).all()
+    skuId = []
+    for val in heart_productsId:
+        skuId = skuId + json.loads(val.heart_productsId)['id']
+
+    # найти в Sku, получить Sku.id и Sku.sku_lowercase, записать в массив
+    heart_products = db.session.query(Sku.id, Sku.sku_lowercase).filter(Sku.id.in_(skuId)).all()
+    
+    # удаляем все записи в таблице Sku
+    db.session.query(Sku).delete()
+    db.session.commit()
 
     get_news()
     lenta_category_skus       = LENTA()
     perekrestok_category_skus = PEREKRESTOK()
     pka_category_skus         = PKA()
     magnit_category_skus      = MAGNIT()
-    
-    # удаляем все записи в таблице Sku
-    db.session.query(Sku).delete()
-    db.session.commit()
-    
+        
     beg             = dt.now()
     _all            = 0 # общее число одинаковых товаров
     _total          = 0 # общее число товаров
@@ -1058,14 +1082,17 @@ def main_search():
                 
                 # #algoliasearch
                 # index_algoliasearch.save_object({'objectID': _total, 'product': product})
+                                
+                # создаем случайный индекс
+                index = get_random_index(size=12)
                 
-                #create a sku in database
-                index = ''.join(choices(ascii_uppercase + ascii_lowercase + digits, k=12)) # получаем случайный индекс
-
-                # compare hearts_values & new product lowercase name
+                # сравниваем с новыми данными по Sku.sku_lowercase из ранееполученного массива heart_products,
+                # если есть, то индекс не меняем
                 for heart_product in heart_products:
                     if heart_product.sku_lowercase == elem1['name'].lower():
+                        print('/////', heart_product.sku_lowercase)
                         index = heart_product.id
+                        break
                 
                 sku_discount_desc = sorted(product, key=by_discount, reverse=True) # макс скидка
                 sku_price_asc     = sorted(product, key=by_price)                  # мин цена
