@@ -53,12 +53,8 @@
                 _search_text = _searchParams.get('search_text');
             }
 
-            if (_searchParams.has('hearts_values')) {
-                if (Cookies.get('hearts_values')) {
-                    _hearts_values = Cookies.get('hearts_values');
-                } else {
-                    _hearts_values = '';
-                }
+            if (_searchParams.has('hearts_values')) {                
+                _hearts_values = '1';
             }
             
             $.get("{{ url_for('main.add_loading') }}", {offset: +_offset.text(),
@@ -68,8 +64,8 @@
                                                         category_number: _category_number})
                 .done(function(response) {
                     if (response['html_text'] != '') {
-                        html_text = replace_heart_class(response['html_text']); // Функция находится в base.html
-                        $('#html_text').append(html_text);
+                        //html_text = replace_heart_class(response['html_text']); // Функция находится в base.html
+                        $('#html_text').append(response['html_text']);
                         _offset.text(+_offset.text()+12);
                     }
                     if (response['show_load_button']) {
@@ -94,11 +90,7 @@
             }
             
             if (_searchParams.has('hearts_values')) {
-                if (Cookies.get('hearts_values')) {
-                    _hearts_values = Cookies.get('hearts_values');
-                } else {
-                    _hearts_values = '';
-                }
+                _hearts_values = '1';
             }
 
             $.get("{{ url_for('main.add_loading') }}", {offset: 0,
@@ -108,8 +100,8 @@
                                                         category_number: _category_number})
                 .done(function(response){
                     if (response['html_text'] != '') {
-                        html_text = replace_heart_class(response['html_text']); // Функция находится в base.html
-                        $('#html_text').html(html_text);
+                        //html_text = replace_heart_class(response['html_text']); // Функция находится в base.html
+                        $('#html_text').html(response['html_text']);
                         $('#offset').text(12);
                     }
                     if (response['show_load_button']) {
@@ -141,11 +133,7 @@
                 }
 
                 if (_searchParams.has('hearts_values')) {
-                    if (Cookies.get('hearts_values')) {
-                        _hearts_values = Cookies.get('hearts_values');
-                    } else {
-                        _hearts_values = '';
-                    }
+                    _hearts_values = '1';
                 }
 
             $.get("{{ url_for('main.add_loading') }}", {offset: 0,
@@ -154,8 +142,8 @@
                                                         hearts_values: _hearts_values,
                                                         category_number: _category_number})
                 .done(function(response){
-                    html_text = replace_heart_class(response['html_text']); // Функция находится в base.html
-                    $('#html_text').html(html_text);
+                    //html_text = replace_heart_class(response['html_text']); // Функция находится в base.html
+                    $('#html_text').html(response['html_text']);
                     $('#offset').text(12);
                     if (response['show_load_button']) {
                         $('#load_button').show();
