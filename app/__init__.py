@@ -5,8 +5,8 @@ from flask_mail                     import Mail
 from flask_redis                    import FlaskRedis
 from flask_sqlalchemy               import SQLAlchemy
 from flask_migrate                  import Migrate
+from flask_login                    import LoginManager
 # from algoliasearch.search_client    import SearchClient
-# from flask_login        import LoginManager
 # from flask_uploads      import UploadSet, IMAGES, configure_uploads
 
 # import dash
@@ -19,10 +19,10 @@ mail                                            = Mail()
 redis_store                                     = FlaskRedis()
 db                                              = SQLAlchemy()
 migrate                                         = Migrate()
+login_manager                                   = LoginManager()
 # algoliasearch                                   = SearchClient.create(Config.ALGOLIASEARCH_APP_ID, Config.ALGOLIASEARCH_API_KEY)
 # index_algoliasearch                             = algoliasearch.init_index('_algoliaSearch')
 # images                                          = UploadSet('images', IMAGES)
-# login_manager                                   = LoginManager()
 # login_manager.login_view                        = 'auth.login'
 # login_manager.login_message                     = 'Пройдите регистрацию'
 # login_manager.login_message_category            = 'alert-info'
@@ -42,8 +42,7 @@ def create_app(config_class=Config):
     redis_store.init_app(app, decode_responses=True)    
     db.init_app(app)
     migrate.init_app(app, db)
-
-    # login_manager.init_app(app)
+    login_manager.init_app(app)
         
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
