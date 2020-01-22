@@ -3,6 +3,8 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config(object):  
+    SECRET_KEY = 'erfqerf-895122-QWswsdx-xc34deawedf'
+
     # db Postgresql
     SQLALCHEMY_DATABASE_URI        = os.environ.get('DATABASE_URL') or 'postgresql:///db_products'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
