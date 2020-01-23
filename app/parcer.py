@@ -1004,7 +1004,7 @@ def main_search():
     
     # удалить непосещаемых пользователей
     count_of_Users = db.session.query(Users).count()
-    count_of_deleted_Users = db.session.query(Users).filter(Users.visit_time < (dt.now()-timedelta(minutes=10))).delete()
+    count_of_deleted_Users = db.session.query(Users).filter(Users.visit_time < (dt.now()-timedelta(minutes=60))).delete()
     print('Всего пользователей: ', count_of_Users)
     print('Количество удаленных пользователей: ', count_of_deleted_Users)
     db.session.commit()
