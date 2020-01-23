@@ -21,11 +21,9 @@
                     <span class="icon-bar"></span>
                 </button>
                 <a class="navbar-brand" href="{{ url_for('main.index') }}">Сравни</a>
-                <!-- <p class="navbar-text navbar-center">BBBB</p> -->
-                <p class="navbar-text navbar-center">
-                    <i onclick="window.location.href='/goods/?hearts_values'" id="heart_i" class={% if current_user.is_authenticated == False or current_user.heart_productsId == '{"id": []}' %}'fa fa-heart-o fa-2x aria-hidden="true"'{% else %}'fa fa-heart fa-2x aria-hidden="true"'{% endif %} style="color: #ffc000; cursor: pointer;"></i>
+                <p class="navbar-center">
+                    <i onclick="window.location.href='/goods/?hearts_values'" id="heart_i" class={% if current_user.is_authenticated == False or current_user.heart_productsId == '{"id": []}' %}'fa fa-heart-o fa-3x aria-hidden="true"'{% else %}'fa fa-heart fa-3x aria-hidden="true"'{% endif %} style="color: #ffc000; cursor: pointer;"></i>
                 </p>
-                <!-- <i onclick="window.location.href='/goods/?hearts_values'" id="heart_i" class={% if current_user.is_authenticated == False or current_user.heart_productsId == '{"id": []}' %}'fa fa-heart-o fa-2x aria-hidden="true"'{% else %}'fa fa-heart fa-2x aria-hidden="true"'{% endif %} style="color: #ffc000; margin-top: 10px; width: 40%; position: absolute; text-align: end; cursor: pointer;"></i> -->
             </div>
             <div class="collapse navbar-collapse" id="navbar-main">
                 <form class="navbar-form navbar-right">
