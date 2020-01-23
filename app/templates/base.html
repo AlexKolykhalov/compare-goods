@@ -200,7 +200,7 @@
             _spinner.show();
             _search_result.hide();
             if ($(this).val().length > 2) {                
-                $.get("{{url_for('main.products_search')}}", {search_text: $('#inputdefault').val()})
+                $.get("{{url_for('main.products_search')}}", {search_text: $.trim($('#inputdefault').val())})
                     .done(function(response){                        
                         _spinner.hide();
                         _search_result.show();
