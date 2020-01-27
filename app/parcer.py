@@ -1010,6 +1010,15 @@ def main_search():
         db.session.add(dbStatus)
     db.session.commit()    
     
+    # фиксируем дату начала обновления данных
+    beg = dt.now()
+
+    get_news()
+    lenta_category_skus       = LENTA()
+    perekrestok_category_skus = PEREKRESTOK()
+    pka_category_skus         = PKA()
+    magnit_category_skus      = MAGNIT()
+    
     # удалить непосещаемых пользователей
     count_of_Users = db.session.query(Users).count()
     count_of_deleted_Users = db.session.query(Users).filter(Users.visit_time < (dt.now()-timedelta(minutes=60))).delete()
@@ -1029,14 +1038,7 @@ def main_search():
     # удаляем все записи в таблице Sku
     db.session.query(Sku).delete()
     db.session.commit()
-
-    get_news()
-    lenta_category_skus       = LENTA()
-    perekrestok_category_skus = PEREKRESTOK()
-    pka_category_skus         = PKA()
-    magnit_category_skus      = MAGNIT()
         
-    beg             = dt.now()
     _all            = 0 # общее число одинаковых товаров
     _total          = 0 # общее число товаров
     category_number = 0 # счетчик для нумерования категорий товара
@@ -1131,14 +1133,14 @@ def main_search():
         print('----Время анализа кат. '+category+' составило: '+ str(finish-start)+' сек.----')
         print('----Внесено: '+str(_in)+'----')
         print('')
-    # фиксируем дату обновления данных
-
+    
+    # фиксируем дату окончания обновления данных
     end = dt.now()
     print('Общее время выполнения: '+str(end-beg)+' сек.')
     print('Всего внесено: '+str(_all))
     print('Общее количество товара: '+str(_total))
 
-    # change status(counting=True, counted=False) DB
+    # смена статуса БД (status='1'(обновляется), status='0'(не обновляется))
     dbStatus = db.session.query(DbStatus).get(1)
     dbStatus.status = '0'
     
