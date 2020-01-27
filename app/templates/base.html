@@ -141,7 +141,6 @@
             $.post("{{url_for('main.db_operation')}}", {operation: operation, userId: userId, heartId: heartId})
                 .done(function(response){
                     Cookies.set('userId', response['userId'], {expires: 365*2});
-                    console.log(response);
                     if (response['count_of_hearts'] == 0) {                            
                         if ($('#heart_i').hasClass('fa-heart')) {
                             $('#heart_i').toggleClass('fa-heart fa-heart-o');
