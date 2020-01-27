@@ -30,12 +30,14 @@ def goods(category_number=None):
     hearts_values         = request.args.get('hearts_values') # нажали на heart в nav-bar
     search_text           = request.args.get('search_text')
     only_twin             = request.cookies.get('switch_value')
-            
-    data = html_creator(sort_method='null',                                                           
+    
+    heart_productsId = json.loads(current_user.heart_productsId)['id'] if current_user.is_authenticated else []
+
+    data = html_creator(sort_method='null',
                         search_text=search_text,
                         only_twin=only_twin,
                         sku=sku,
-                        hearts_values=None if hearts_values is None else json.loads(current_user.heart_productsId)['id'],
+                        hearts_values=None if hearts_values is None else heart_productsId,
                         category_number=category_number,
                         offset=0,
                         count_of_products=12,
@@ -63,8 +65,9 @@ def goods(category_number=None):
     
     if current_user.is_authenticated:
         # set hearts
-        html_text = set_heart_class(html_text=html_text, hearts_values=hearts_values) # меняем класс fa fa-heart-o/fa fa-heart
-                                                                                  # в зависимости от наличия current_user.heart_productsId
+        html_text = set_heart_class(html_text=html_text, hearts_values=hearts_values) # значения hearts_values ('' или None)
+                                                                                      # меняем класс fa fa-heart-o/fa fa-heart
+                                                                                      # в зависимости от наличия current_user.heart_productsId
     
     return render_template('goods.html', html_text=html_text, 
                                          show_load_button=show_load_button, 
