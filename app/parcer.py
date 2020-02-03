@@ -95,7 +95,11 @@ def MAGNIT():
                 break
         if category == '':
             continue
-        name         = name.replace('Масло_сливочное', 'Масло сливочное')
+        name         = name.replace('Масло_сливочное', 'Масло сливочное')\
+                           .replace('Масло_подсолнечное', 'Масло подсолнечное')\
+                           .replace('Масло_оливковое', 'Масло оливковое')\
+                           .replace('Крабовые_палочки', 'Крабовые палочки')\
+                           .replace('Мясо_мидий', 'Мясо мидий')
         product_img  = 'https://magnit.ru'+product.find('img')['data-src']
         product_href = 'https://magnit.ru'+product['href']        
         try:
