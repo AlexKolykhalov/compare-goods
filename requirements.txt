@@ -9,7 +9,7 @@ cffi==1.13.2
 chardet==3.0.4
 Click==7.0
 colorama==0.4.1
-cryptography==2.8
+cryptography==3.2
 dnspython==1.16.0
 dominate==2.4.0
 eventlet==0.25.1
