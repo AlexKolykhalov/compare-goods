@@ -4,7 +4,7 @@ APScheduler==3.6.3
 astroid==2.3.2
 beautifulsoup4==4.8.1
 blinker==1.4
-certifi==2019.11.28
+certifi==2022.12.7
 cffi==1.13.2
 chardet==3.0.4
 Click==7.0
